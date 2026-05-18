@@ -544,7 +544,7 @@ const PLANS = {
 })();
 
 async function loadPlan(memberId) {
-  const { data: kbc } = await db.from('kbc_memberships').select('*').eq('member_id', memberId).single();
+  const { data: kbc } = await db.from('kbc_memberships').select('*').eq('member_id', memberId).maybeSingle();
   if (!kbc?.payment_plan || kbc.payment_plan === 'standard') return;
 
   planData = kbc;
@@ -587,7 +587,7 @@ async function loadPlan(memberId) {
 }
 
 async function loadKbcStatus(memberId) {
-  const { data: kbc } = await db.from('kbc_memberships').select('*').eq('member_id', memberId).single();
+  const { data: kbc } = await db.from('kbc_memberships').select('*').eq('member_id', memberId).maybeSingle();
   kbcData = kbc;
   const title = document.getElementById('kbc-status-title');
   const badge = document.getElementById('kbc-status-badge');
