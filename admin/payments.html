@@ -582,6 +582,20 @@ function filterTable() {
   renderAll(filtered);
 }
 
+async function viewReceipt(url) {
+  // Extract the path from the full URL
+  const match = url.match(/receipts\/(.+)$/);
+  if (!match) { window.open(url, '_blank'); return; }
+  const path = match[1];
+
+  const { data, error } = await db.storage
+    .from('receipts')
+    .createSignedUrl(path, 60); // 60 second expiry
+
+  if (error) { toast('Could not open receipt: ' + error.message); return; }
+  window.open(data.signedUrl, '_blank');
+}
+
 function toast(msg) {
   let c=document.getElementById('toasts');
   if(!c){c=document.createElement('div');c.id='toasts';c.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px';document.body.appendChild(c);}
