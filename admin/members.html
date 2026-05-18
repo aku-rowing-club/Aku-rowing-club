@@ -538,6 +538,9 @@ function openAdd() {
   document.getElementById('f-name').value = '';
   document.getElementById('f-email').value = '';
   document.getElementById('f-portal-role').selectedIndex = 0;
+  const btn = document.getElementById('add-btn');
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-send"></i>Send invite';
 }
 
 function closeAdd() {
