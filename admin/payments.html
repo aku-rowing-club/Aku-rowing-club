@@ -466,6 +466,7 @@ function renderSubmitted(payments) {
       ${p.payment_method==='cash'?'<span class="badge b-amber"><i class="ti ti-cash"></i>Cash</span>':'<span class="badge b-blue"><i class="ti ti-building-bank"></i>Transfer</span>'}
       ${p.receipt_url?`<a href="${p.receipt_url}" target="_blank" class="btn btn-outline btn-sm"><i class="ti ti-eye"></i>Receipt</a>`:'<span style="font-size:12px;color:var(--dim)">No receipt</span>'}
       <button class="btn btn-accent btn-sm" onclick="confirmPayment('${p.id}','${m.full_name||''}')"><i class="ti ti-check"></i>Confirm</button>
+      <button class="btn btn-danger btn-sm" onclick="rejectPayment('${p.id}', '${m.full_name||''}')"><i class="ti ti-x"></i>Reject</button>
     </div>`;
   }).join('');
 }
