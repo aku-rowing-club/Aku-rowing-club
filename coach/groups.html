@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Coach Dashboard — AKU Rowing Club</title>
+<title>Training Groups — AKU Rowing Club Coach</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css">
 <style>
@@ -270,6 +270,13 @@ svg.spark{overflow:visible}
 @media(max-width:900px){body{margin-left:0}.sidebar{display:none}}
 
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.piece-card{background:var(--surf2);border:1px solid var(--bd);border-radius:12px;padding:1.1rem;margin-bottom:.65rem;position:relative}
+.piece-card .piece-num{width:24px;height:24px;border-radius:50%;background:var(--ag);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.piece-type-btn{padding:7px 14px;border-radius:8px;border:1.5px solid var(--bd);background:rgba(255,255,255,.04);color:var(--sub);font-size:11.5px;font-weight:500;cursor:pointer;transition:all .18s;font-family:Inter,sans-serif}
+.piece-type-btn.active{background:var(--asoft);border-color:var(--a1);color:var(--a3)}
+.member-check{display:flex;align-items:center;gap:.65rem;padding:.55rem .75rem;border-radius:8px;cursor:pointer;transition:background .15s}
+.member-check:hover{background:rgba(255,255,255,.04)}
+.member-check input{accent-color:var(--a1)}
 </style>
 </head><body>
 <aside class="sidebar">
@@ -281,14 +288,14 @@ svg.spark{overflow:visible}
   </div>
   <nav class="sb-nav">
     <div class="sb-lbl">Coaching</div>
-    <a class="sb-a on" href="dashboard.html"><i class="ti ti-home"></i>Dashboard</a>
-    <a class="sb-a" href="squad.html"><i class="ti ti-users"></i>Squad</a>
-    <a class="sb-a" href="groups.html"><i class="ti ti-users-group"></i>Training Groups</a>
-    <a class="sb-a" href="library.html"><i class="ti ti-books"></i>Workout Library</a>
-    <a class="sb-a" href="assign.html"><i class="ti ti-pencil"></i>Assign Workout</a>
-    <a class="sb-a" href="planning.html"><i class="ti ti-calendar-event"></i>Weekly Planning</a>
-    <a class="sb-a" href="progress.html"><i class="ti ti-chart-line"></i>Member Progress</a>
-    <a class="sb-a" href="regattas.html"><i class="ti ti-anchor"></i>Regattas</a>
+    <a class="sb-a " href="dashboard.html"><i class="ti ti-home"></i>Dashboard</a>
+    <a class="sb-a " href="squad.html"><i class="ti ti-users"></i>Squad</a>
+    <a class="sb-a on" href="groups.html"><i class="ti ti-users-group"></i>Training Groups</a>
+    <a class="sb-a " href="library.html"><i class="ti ti-books"></i>Workout Library</a>
+    <a class="sb-a " href="assign.html"><i class="ti ti-pencil"></i>Assign Workout</a>
+    <a class="sb-a " href="planning.html"><i class="ti ti-calendar-event"></i>Weekly Planning</a>
+    <a class="sb-a " href="progress.html"><i class="ti ti-chart-line"></i>Member Progress</a>
+    <a class="sb-a " href="regattas.html"><i class="ti ti-anchor"></i>Regattas</a>
   </nav>
   <div class="sb-foot">
     <a class="sb-logout" href="#" onclick="signOut()"><i class="ti ti-arrow-left"></i>Sign out</a>
@@ -296,9 +303,8 @@ svg.spark{overflow:visible}
   </div>
 </aside>
 <div class="topbar">
-  <div><div class="tb-title">Coach Dashboard</div></div>
+  <div><div class="tb-title" id="page-title">Coach Portal</div></div>
   <div class="tb-right">
-    <a href="assign.html" class="btn btn-accent btn-sm"><i class="ti ti-plus"></i>Assign workout</a>
     <div class="tb-user">
       <div class="tb-av" id="user-av" style="background:linear-gradient(135deg,#E8335A,#8B3FE0)">CI</div>
       <span class="tb-name" id="user-name">Loading...</span>
@@ -308,74 +314,13 @@ svg.spark{overflow:visible}
 
 <div class="page" id="main-page" style="display:none">
   <div class="pg-head">
-    <div>
-      <h1 id="welcome-msg">Welcome back, Coach</h1>
-      <div class="sub" id="dash-sub">Loading squad data...</div>
-    </div>
+    <div><h1>Training Groups</h1><div class="sub">Create cohorts for group assignment. Members can be in multiple groups.</div></div>
+    <button class="btn btn-accent" onclick="openCreateGroup()"><i class="ti ti-plus"></i>New group</button>
   </div>
 
-  <div class="stat-grid" style="margin-bottom:1.5rem">
-    <div class="stat">
-      <div class="stat-row"><span class="stat-label">Active members</span><i class="ti ti-users stat-ico"></i></div>
-      <div class="stat-num" id="s-members">—</div>
-      <div class="stat-trend" id="s-members-sub"></div>
-    </div>
-    <div class="stat">
-      <div class="stat-row"><span class="stat-label">Sessions this week</span><i class="ti ti-activity stat-ico"></i></div>
-      <div class="stat-num" id="s-sessions">—</div>
-      <div class="stat-trend" id="s-sessions-sub"></div>
-    </div>
-    <div class="stat">
-      <div class="stat-row"><span class="stat-label">Workouts assigned</span><i class="ti ti-clipboard-list stat-ico"></i></div>
-      <div class="stat-num" id="s-assigned">—</div>
-      <div class="stat-trend" id="s-assigned-sub"></div>
-    </div>
-    <div class="stat">
-      <div class="stat-row"><span class="stat-label">Completion rate</span><i class="ti ti-chart-pie stat-ico"></i></div>
-      <div class="stat-num" id="s-rate" style="color:#34D399">—</div>
-      <div class="stat-trend" id="s-rate-sub"></div>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
-    <div class="card">
-      <div class="card-head">
-        <div><div class="card-title">Recent sessions logged</div><div class="card-sub">Last 24 hours</div></div>
-        <a href="progress.html" class="card-link">All <i class="ti ti-arrow-right"></i></a>
-      </div>
-      <div id="recent-logs" style="display:flex;flex-direction:column;gap:.4rem">
-        <div style="text-align:center;padding:1.5rem;color:var(--sub)"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px"></i></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-head">
-        <div><div class="card-title">Pending workouts</div><div class="card-sub">Not yet completed</div></div>
-        <a href="assign.html" class="card-link">Assign <i class="ti ti-arrow-right"></i></a>
-      </div>
-      <div id="pending-list" style="display:flex;flex-direction:column;gap:.4rem">
-        <div style="text-align:center;padding:1.5rem;color:var(--sub)"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px"></i></div>
-      </div>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
-    <div class="card">
-      <div class="card-head"><div class="card-title">Squad overview</div></div>
-      <div id="squad-overview" style="display:flex;flex-direction:column;gap:.35rem"></div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div><div class="card-title">Availability this week</div><div class="card-sub" id="avail-week-label">—</div></div></div>
-      <div id="avail-summary" style="display:flex;flex-direction:column;gap:.35rem"></div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="card-title">Quick actions</div></div>
-      <div style="display:flex;flex-direction:column;gap:.5rem">
-        <a href="assign.html" class="btn btn-accent"><i class="ti ti-plus"></i>Assign workout</a>
-        <a href="groups.html" class="btn btn-outline"><i class="ti ti-users-group"></i>Manage groups</a>
-        <a href="library.html" class="btn btn-outline"><i class="ti ti-books"></i>Workout library</a>
-        <a href="planning.html" class="btn btn-outline"><i class="ti ti-calendar-event"></i>Weekly planning</a>
-      </div>
+  <div id="groups-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem">
+    <div style="text-align:center;padding:3rem;color:var(--sub);grid-column:1/-1">
+      <i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:24px"></i>
     </div>
   </div>
 </div>
@@ -384,6 +329,32 @@ svg.spark{overflow:visible}
   <i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:32px;color:var(--a1)"></i>
 </div>
 
+<!-- CREATE GROUP MODAL -->
+<div class="overlay" id="group-modal" onclick="if(event.target===this)closeGroup()">
+  <div class="modal" style="max-width:520px;text-align:left;padding:2rem;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+      <div>
+        <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--a1);margin-bottom:4px">Training group</div>
+        <h3 style="font-family:'Fraunces',serif;font-size:1.2rem;color:white;margin:0" id="group-modal-title">New group</h3>
+      </div>
+      <button onclick="closeGroup()" style="background:rgba(255,255,255,.07);border:none;cursor:pointer;color:var(--sub);font-size:18px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <input type="hidden" id="group-id">
+    <div style="margin-bottom:.85rem"><label class="lbl">Group name *</label>
+      <input class="inp" id="group-name" placeholder="e.g. Regatta crew, Indoor beginners"></div>
+    <div style="margin-bottom:1.25rem"><label class="lbl">Description</label>
+      <input class="inp" id="group-desc" placeholder="Optional description"></div>
+    <div style="margin-bottom:1.25rem">
+      <label class="lbl">Members</label>
+      <input class="inp" placeholder="Search..." id="group-member-search" oninput="filterGroupMembers()" style="margin-bottom:.5rem;font-size:12px">
+      <div id="group-member-list" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:.25rem"></div>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeGroup()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveGroup()"><i class="ti ti-check"></i>Save group</button>
+    </div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/auth.js"></script>
 <script>
@@ -396,126 +367,159 @@ async function coachInit() {
   }
   const av = document.getElementById('user-av');
   const nm = document.getElementById('user-name');
-  if (av) { av.textContent = profile.initials||'CI'; }
-  if (nm) nm.textContent = profile.full_name||'Coach';
+  if (av) { av.textContent = profile.initials || 'CI'; av.style.background = 'linear-gradient(135deg,#E8335A,#8B3FE0)'; }
+  if (nm) nm.textContent = profile.full_name || 'Coach';
   return { user: session.user, profile };
 }
 function toast(msg) {
-  let c=document.getElementById('toasts');
-  if(!c){c=document.createElement('div');c.id='toasts';c.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px';document.body.appendChild(c);}
-  const el=document.createElement('div');el.className='toast';
+  let c = document.getElementById('toasts');
+  if (!c) { c = document.createElement('div'); c.id='toasts'; c.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px'; document.body.appendChild(c); }
+  const el = document.createElement('div'); el.className='toast';
   el.innerHTML='<i class="ti ti-check"></i><span>'+msg+'</span>';
   c.appendChild(el);
-  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),300)},3500);
+  setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>el.remove(),300); },3500);
 }
 </script>
 <script>
+let allMembers = [];
+let allGroups = [];
+let groupSelectedMembers = new Set();
+let coachUid = null;
+
 (async () => {
   const session = await coachInit();
   if (!session) return;
-  const { user, profile } = session;
+  coachUid = session.user.id;
 
-  document.getElementById('welcome-msg').textContent =
-    'Welcome back, ' + (profile.full_name?.split(' ')[0] || 'Coach');
-
-  const now = new Date();
-  const weekStart = new Date(now); weekStart.setDate(now.getDate()-now.getDay());
-  const weekStartStr = weekStart.toISOString().split('T')[0];
-
-  const [membersRes, assignedRes, logsRes, availRes] = await Promise.all([
-    db.from('profiles').select('id,full_name,initials,color,discipline').eq('portal_role','member'),
-    db.from('assigned_workouts').select('*, workout:workouts(title), member:profiles!assigned_workouts_assigned_to_fkey(full_name,initials,color)').order('scheduled_date',{ascending:false}).limit(50),
-    db.from('workout_logs').select('*, member:profiles(full_name,initials,color)').gte('logged_date',weekStartStr).order('logged_date',{ascending:false}),
-    db.from('availability').select('*, member:profiles(full_name,initials)').eq('week_start', weekStartStr),
+  const [membersRes, groupsRes] = await Promise.all([
+    db.from('profiles').select('*').eq('portal_role','member').order('full_name'),
+    db.from('training_groups').select('*, members:group_members(member_id, profile:profiles(full_name,initials,color))'),
   ]);
 
-  const members = membersRes.data||[];
-  const assigned = assignedRes.data||[];
-  const logs = logsRes.data||[];
-  const avails = availRes.data||[];
-
-  // Stats
-  const weekAssigned = assigned.filter(a => a.scheduled_date >= weekStartStr);
-  const weekCompleted = weekAssigned.filter(a => a.status==='completed');
-  const rate = weekAssigned.length ? Math.round(weekCompleted.length/weekAssigned.length*100) : 0;
-
-  document.getElementById('s-members').textContent = members.length;
-  document.getElementById('s-members-sub').textContent = members.length + ' active rowers';
-  document.getElementById('s-sessions').textContent = logs.length;
-  document.getElementById('s-sessions-sub').textContent = 'logged this week';
-  document.getElementById('s-assigned').textContent = weekAssigned.length;
-  document.getElementById('s-assigned-sub').textContent = weekCompleted.length + ' completed';
-  document.getElementById('s-rate').textContent = rate + '%';
-  document.getElementById('s-rate-sub').textContent = 'completion this week';
-  document.getElementById('s-rate').style.color = rate>=80?'#34D399':rate>=50?'#FBB724':'#FC8585';
-
-  document.getElementById('dash-sub').textContent =
-    members.length + ' members · ' + weekAssigned.length + ' workouts this week · ' + rate + '% completion';
-
-  // Recent logs
-  const rl = document.getElementById('recent-logs');
-  const today = now.toISOString().split('T')[0];
-  const todayLogs = logs.filter(l => l.logged_date===today);
-  rl.innerHTML = todayLogs.length
-    ? todayLogs.slice(0,5).map(l => `
-        <div style="display:flex;align-items:center;gap:.65rem;padding:.5rem 0;border-bottom:1px solid var(--bd)">
-          <div class="av" style="width:28px;height:28px;font-size:9px;background:${l.member?.color||'#E8335A'}">${l.member?.initials||'?'}</div>
-          <div style="flex:1"><div style="font-size:12.5px;color:white">${l.member?.full_name||'?'}</div>
-            <div style="font-size:11px;color:var(--sub)">${l.total_meters?.toLocaleString()||'—'}m · ${l.avg_split||'—'} · ${l.mood||''}</div>
-          </div>
-          ${l.difficulty?`<span class="badge b-dim" style="font-size:9px">${l.difficulty}</span>`:''}
-        </div>`).join('')
-    : '<div style="text-align:center;padding:1.5rem;color:var(--sub);font-size:13px">No sessions logged today yet.</div>';
-
-  // Pending workouts
-  const pl = document.getElementById('pending-list');
-  const pending = assigned.filter(a=>a.status==='pending').slice(0,5);
-  pl.innerHTML = pending.length
-    ? pending.map(a => `
-        <div style="display:flex;align-items:center;gap:.65rem;padding:.5rem 0;border-bottom:1px solid var(--bd)">
-          <div class="av" style="width:28px;height:28px;font-size:9px;background:${a.member?.color||'#8B3FE0'}">${a.member?.initials||'?'}</div>
-          <div style="flex:1"><div style="font-size:12.5px;color:white">${a.member?.full_name||'?'}</div>
-            <div style="font-size:11px;color:var(--sub)">${a.workout?.title||'Workout'} · ${a.scheduled_date||'—'}</div>
-          </div>
-          ${a.scheduled_date===today?'<span class="badge b-amber">Due today</span>':a.scheduled_date<today?'<span class="badge b-red">Overdue</span>':'<span class="badge b-dim">Upcoming</span>'}
-        </div>`).join('')
-    : '<div style="text-align:center;padding:1.5rem;color:var(--sub);font-size:13px">All workouts completed ✓</div>';
-
-  // Squad overview
-  const so = document.getElementById('squad-overview');
-  so.innerHTML = members.slice(0,6).map(m => {
-    const mLogs = logs.filter(l=>l.member_id===m.id).length;
-    const mPending = assigned.filter(a=>a.assigned_to===m.id&&a.status==='pending').length;
-    return `<div style="display:flex;align-items:center;gap:.65rem;padding:.45rem 0">
-      <div class="av" style="width:26px;height:26px;font-size:9px;background:${m.color||'#E8335A'}">${m.initials||'?'}</div>
-      <div style="flex:1;font-size:12.5px;color:white">${m.full_name}</div>
-      <span style="font-size:11px;color:var(--sub)">${mLogs} sessions</span>
-      ${mPending?`<span class="badge b-amber" style="font-size:9px">${mPending} pending</span>`:''}
-    </div>`;
-  }).join('') + (members.length>6?`<a href="squad.html" class="card-link" style="margin-top:.5rem">+${members.length-6} more <i class="ti ti-arrow-right"></i></a>`:'');
-
-  // Availability summary
-  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate()+6);
-  document.getElementById('avail-week-label').textContent =
-    weekStart.toLocaleDateString('en-GB',{month:'short',day:'numeric'}) + ' – ' +
-    weekEnd.toLocaleDateString('en-GB',{month:'short',day:'numeric'});
-  const as = document.getElementById('avail-summary');
-  const DAYS = ['mon','tue','wed','thu','fri','sat','sun'];
-  const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  as.innerHTML = DAYS.map((d,i) => {
-    const avCount = avails.filter(a=>a[d]&&a[d]!=='unavailable').length;
-    const pct = members.length ? Math.round(avCount/members.length*100) : 0;
-    return `<div style="display:flex;align-items:center;gap:.65rem">
-      <div style="width:28px;font-size:11px;color:var(--dim)">${DAY_NAMES[i]}</div>
-      <div style="flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:var(--ag);border-radius:3px;transition:width .5s"></div>
-      </div>
-      <div style="font-size:11px;color:var(--sub);min-width:30px;text-align:right">${avCount}/${members.length}</div>
-    </div>`;
-  }).join('');
-  if (!avails.length) as.innerHTML = '<div style="font-size:12px;color:var(--dim)">No availability submitted yet for this week.</div>';
+  allMembers = membersRes.data || [];
+  allGroups = groupsRes.data || [];
 
   document.getElementById('loading-page').style.display='none';
   document.getElementById('main-page').style.display='block';
+  renderGroups();
 })();
+
+function renderGroups() {
+  const grid = document.getElementById('groups-grid');
+  if (!allGroups.length) {
+    grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--sub);grid-column:1/-1">No groups yet. Create one to assign workouts to multiple members at once.</div>';
+    return;
+  }
+  grid.innerHTML = allGroups.map(g => `
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div style="width:10px;height:10px;border-radius:50%;background:${g.color||'var(--a1)'};display:inline-block;margin-right:6px"></div>
+          <span style="font-family:'Fraunces',serif;font-size:1rem;font-weight:600;color:white">${g.name}</span>
+          ${g.description?`<div style="font-size:12px;color:var(--sub);margin-top:3px">${g.description}</div>`:''}
+        </div>
+        <div style="display:flex;gap:.35rem">
+          <button class="btn btn-outline btn-xs" onclick="editGroup(${JSON.stringify(g).replace(/'/g,"&apos;")})"><i class="ti ti-edit"></i></button>
+          <button class="btn btn-danger btn-xs" onclick="deleteGroup('${g.id}','${g.name.replace(/'/g,"\\'")}')"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.85rem">
+        ${(g.members||[]).map(m => `
+          <div style="display:flex;align-items:center;gap:.4rem;padding:3px 8px;background:var(--surf2);border-radius:99px">
+            <div class="av" style="width:18px;height:18px;font-size:7px;background:${m.profile?.color||'#1FB8C9'}">${m.profile?.initials||'?'}</div>
+            <span style="font-size:11px;color:var(--text)">${m.profile?.full_name||'?'}</span>
+          </div>`).join('')}
+        ${!g.members?.length?'<span style="font-size:12px;color:var(--dim)">No members yet</span>':''}
+      </div>
+      <div style="padding-top:.75rem;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;color:var(--dim)">${g.members?.length||0} members</span>
+        <a href="assign.html" class="btn btn-accent btn-sm"><i class="ti ti-pencil"></i>Assign workout</a>
+      </div>
+    </div>`).join('');
+}
+
+function openCreateGroup() {
+  document.getElementById('group-id').value = '';
+  document.getElementById('group-name').value = '';
+  document.getElementById('group-desc').value = '';
+  document.getElementById('group-modal-title').textContent = 'New group';
+  groupSelectedMembers = new Set();
+  renderGroupMembers(allMembers);
+  document.getElementById('group-modal').classList.add('show');
+}
+
+function editGroup(g) {
+  document.getElementById('group-id').value = g.id;
+  document.getElementById('group-name').value = g.name;
+  document.getElementById('group-desc').value = g.description||'';
+  document.getElementById('group-modal-title').textContent = 'Edit: ' + g.name;
+  groupSelectedMembers = new Set((g.members||[]).map(m=>m.member_id));
+  renderGroupMembers(allMembers);
+  document.getElementById('group-modal').classList.add('show');
+}
+
+function closeGroup() { document.getElementById('group-modal').classList.remove('show'); }
+
+function filterGroupMembers() {
+  const q = document.getElementById('group-member-search').value.toLowerCase();
+  renderGroupMembers(allMembers.filter(m=>(m.full_name||'').toLowerCase().includes(q)));
+}
+
+function renderGroupMembers(members) {
+  document.getElementById('group-member-list').innerHTML = members.map(m => {
+    const checked = groupSelectedMembers.has(m.id);
+    return `<label style="display:flex;align-items:center;gap:.65rem;padding:.55rem .75rem;border-radius:8px;cursor:pointer;background:${checked?'var(--asoft)':'transparent'};transition:background .15s">
+      <input type="checkbox" ${checked?'checked':''} style="accent-color:var(--a1)"
+        onchange="toggleGroupMember('${m.id}',this.checked,this)">
+      <div class="av" style="width:26px;height:26px;font-size:9px;background:${m.color||'#1FB8C9'}">${m.initials||'?'}</div>
+      <div style="flex:1;font-size:12.5px;color:white">${m.full_name}</div>
+      <span class="badge ${m.discipline==='Indoor'?'b-indoor':m.discipline==='Outdoor'?'b-outdoor':'b-teal'}">${m.discipline||'—'}</span>
+    </label>`;
+  }).join('');
+}
+
+function toggleGroupMember(id, checked, inp) {
+  if (checked) groupSelectedMembers.add(id);
+  else groupSelectedMembers.delete(id);
+  inp.closest('label').style.background = checked ? 'var(--asoft)' : 'transparent';
+}
+
+async function saveGroup() {
+  const name = document.getElementById('group-name').value.trim();
+  const desc = document.getElementById('group-desc').value.trim();
+  const gid = document.getElementById('group-id').value;
+  if (!name) { toast('Group name required'); return; }
+
+  let groupId = gid;
+
+  if (gid) {
+    await db.from('training_groups').update({ name, description: desc }).eq('id', gid);
+    await db.from('group_members').delete().eq('group_id', gid);
+  } else {
+    const { data } = await db.from('training_groups').insert({ name, description: desc, created_by: coachUid }).select().single();
+    groupId = data.id;
+  }
+
+  if (groupSelectedMembers.size) {
+    await db.from('group_members').insert(
+      Array.from(groupSelectedMembers).map(mid => ({ group_id: groupId, member_id: mid }))
+    );
+  }
+
+  toast((gid?'Group updated':'Group created')+' ✓');
+  closeGroup();
+
+  const { data } = await db.from('training_groups').select('*, members:group_members(member_id, profile:profiles(full_name,initials,color))');
+  allGroups = data || [];
+  renderGroups();
+}
+
+async function deleteGroup(id, name) {
+  if (!confirm('Delete group "'+name+'"?')) return;
+  await db.from('training_groups').delete().eq('id', id);
+  allGroups = allGroups.filter(g=>g.id!==id);
+  renderGroups();
+  toast('Group deleted ✓');
+}
 </script>
+</body></html>
