@@ -5,8 +5,8 @@
 
 // Replace these two values with yours from Supabase dashboard
 // Settings → API → Project URL and anon public key
-const SUPABASE_URL = 'YOUR_SUPABASE_URL'
-const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY'
+const SUPABASE_URL = 'https://fxomdesnowabqxfskyyj.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4b21kZXNub3dhYnF4ZnNreXlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwNDg5MjgsImV4cCI6MjA5NDYyNDkyOH0.JHGcIl4aqbCJTLPJojJ9FUlUFJSedchW7jHwkXtLYSM'
 
 const { createClient } = supabase
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
