@@ -526,6 +526,23 @@ function filterPayments(status) {
   renderAll(status==='all'?allPayments:allPayments.filter(p=>p.status===status));
 }
 
+async function rejectPayment(id, name) {
+  const reason = prompt('Reason for rejection (member will see this):');
+  if (reason === null) return; // cancelled
+
+  const { error } = await db.from('payments')
+    .update({
+      status: 'pending',
+      receipt_url: null,
+      rejection_reason: reason || 'Unable to verify payment. Please resubmit with a clear receipt.',
+    })
+    .eq('id', id);
+
+  if (error) { toast('Error: ' + error.message); return; }
+  toast((name || 'Payment') + ' rejected — member notified to resubmit');
+  await loadAll();
+}
+
 async function confirmPayment(id, name) {
   const { error } = await db.from('payments')
     .update({ status:'confirmed', confirmed_at: new Date().toISOString() })
