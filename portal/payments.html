@@ -1,8 +1,9 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Portal · Payments — AKU Rowing Club</title>
+<title>Payments — AKU Rowing Club</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -268,6 +269,17 @@ svg.spark{overflow:visible}
 @keyframes loadBar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 
 @media(max-width:900px){body{margin-left:0}.sidebar{display:none}}
+
+.upload-zone{border:2px dashed rgba(255,255,255,.12);border-radius:12px;padding:2rem;
+  text-align:center;cursor:pointer;transition:all .2s}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--a1);background:var(--asoft)}
+.upload-zone input{display:none}
+.copy-btn{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.3);
+  font-size:11px;padding:4px 0;display:flex;align-items:center;gap:4px;
+  margin-top:5px;transition:color .15s;font-family:Inter,sans-serif}
+.copy-btn:hover{color:var(--a1)}
+.bank-field{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;padding:1rem 1.1rem}
 </style>
 </head><body>
 <aside class="sidebar">
@@ -279,287 +291,372 @@ svg.spark{overflow:visible}
   </div>
   <nav class="sb-nav">
     <div class="sb-lbl">Portal</div>
-    <a class="sb-a " href="dashboard.html"><i class="ti ti-home"></i>Dashboard</a>
-<a class="sb-a " href="profile.html"><i class="ti ti-user"></i>My Profile</a>
-<a class="sb-a " href="workouts.html"><i class="ti ti-player-play"></i>My Workouts</a>
-<a class="sb-a " href="availability.html"><i class="ti ti-calendar-event"></i>Availability</a>
-<a class="sb-a " href="stats.html"><i class="ti ti-chart-line"></i>Stats & PBs</a>
-<a class="sb-a " href="leaderboards.html"><i class="ti ti-trophy"></i>Leaderboards</a>
-<a class="sb-a " href="records.html"><i class="ti ti-star"></i>Club Records</a>
-<a class="sb-a " href="milestones.html"><i class="ti ti-sparkles"></i>Milestones</a>
-<a class="sb-a " href="regattas.html"><i class="ti ti-anchor"></i>Regattas</a>
-<a class="sb-a on" href="payments.html"><i class="ti ti-currency-rupee"></i>Payments</a>
+    <a class="sb-a" href="dashboard.html"><i class="ti ti-home"></i>Dashboard</a>
+    <a class="sb-a" href="profile.html"><i class="ti ti-user"></i>My Profile</a>
+    <a class="sb-a" href="workouts.html"><i class="ti ti-player-play"></i>My Workouts</a>
+    <a class="sb-a" href="availability.html"><i class="ti ti-calendar-event"></i>Availability</a>
+    <a class="sb-a" href="stats.html"><i class="ti ti-chart-line"></i>Stats & PBs</a>
+    <a class="sb-a" href="leaderboards.html"><i class="ti ti-trophy"></i>Leaderboards</a>
+    <a class="sb-a" href="records.html"><i class="ti ti-star"></i>Club Records</a>
+    <a class="sb-a" href="milestones.html"><i class="ti ti-sparkles"></i>Milestones</a>
+    <a class="sb-a" href="regattas.html"><i class="ti ti-anchor"></i>Regattas</a>
+    <a class="sb-a on" href="payments.html"><i class="ti ti-currency-rupee"></i>Payments</a>
   </nav>
   <div class="sb-foot">
-    <a class="sb-logout" href="../index.html"><i class="ti ti-arrow-left"></i>Back to site</a>
-    <div class="sb-version">v1.0 · Demo</div>
+    <a class="sb-logout" href="#" onclick="signOut()"><i class="ti ti-arrow-left"></i>Sign out</a>
+    <div class="sb-version">v1.0</div>
   </div>
 </aside>
+
 <div class="topbar">
   <div><div class="tb-title">Payments & Dues</div></div>
   <div class="tb-right">
-    <input class="tb-search" placeholder="Search...">
-    <a class="tb-btn" title="Notifications"><i class="ti ti-bell"></i></a>
-    <a class="tb-btn" title="Settings"><i class="ti ti-settings"></i></a>
-    <div class="tb-user">
-      <div class="tb-av" style="background:linear-gradient(135deg,#534AB7,#7A6FD4)">ZH</div>
-      <span class="tb-name">Zara Hussain</span>
+    <div class="tb-user" id="user-chip">
+      <div class="tb-av" id="user-av" style="background:linear-gradient(135deg,#534AB7,#7A6FD4)">ZH</div>
+      <span class="tb-name" id="user-name">Loading...</span>
     </div>
   </div>
 </div>
+
 <div class="page">
-<div class="pg-head">
-  <div><h1>Payments & Dues</h1><div class="sub">Club dues, KBC membership, and payment history.</div></div>
-</div>
 
-<!-- OUTSTANDING BANNER -->
-<div class="stat-grid" style="margin-bottom:1.5rem">
-  <div class="stat"><div class="stat-label">Outstanding</div><div class="stat-num">PKR 0</div><div class="stat-trend up"><i class="ti ti-check"></i>All caught up</div></div>
-  <div class="stat"><div class="stat-label">Paid this year</div><div class="stat-num">24<span style="font-size:1.1rem;color:var(--sub)">k</span></div></div>
-  <div class="stat"><div class="stat-label">KBC status</div><div class="stat-num" style="font-size:1.1rem;color:#34D399">Active</div><div class="stat-trend">Renews Oct 2025</div></div>
-  <div class="stat"><div class="stat-label">Next payment</div><div class="stat-num" style="font-size:1.1rem">Sep 2025</div><div class="stat-trend">Quarterly dues</div></div>
-</div>
+  <!-- STATS -->
+  <div class="stat-grid" style="margin-bottom:1.5rem" id="stats-row">
+    <div class="stat"><div class="stat-label">Outstanding</div>
+      <div class="stat-num" id="stat-outstanding">—</div>
+      <div class="stat-trend" id="stat-outstanding-sub"></div></div>
+    <div class="stat"><div class="stat-label">Paid this year</div>
+      <div class="stat-num" id="stat-paid">—</div></div>
+    <div class="stat"><div class="stat-label">KBC status</div>
+      <div class="stat-num" id="stat-kbc" style="font-size:1.1rem">—</div>
+      <div class="stat-trend" id="stat-kbc-sub"></div></div>
+    <div class="stat"><div class="stat-label">Next payment</div>
+      <div class="stat-num" id="stat-next" style="font-size:1.1rem">—</div>
+      <div class="stat-trend" id="stat-next-sub"></div></div>
+  </div>
 
-<!-- KBC PAYMENT CARD -->
-<div class="card" style="background:linear-gradient(135deg,#0A1A2E,#0D2040);border-color:rgba(31,184,201,.2);margin-bottom:1.25rem;padding:0;overflow:hidden">
-  <div style="padding:1.75rem 2rem;border-bottom:1px solid rgba(255,255,255,.07)">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
-      <div>
-        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem">
-          <div style="width:36px;height:36px;border-radius:8px;background:rgba(31,184,201,.15);display:flex;align-items:center;justify-content:center"><i class="ti ti-anchor" style="font-size:16px;color:var(--a1)"></i></div>
-          <div>
-            <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--a1);font-weight:600">KBC membership fee</div>
-            <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:600;color:white;letter-spacing:-.02em">Karachi Boat Club</div>
+  <!-- KBC PAYMENT CARD -->
+  <div class="card" style="background:linear-gradient(135deg,#0A1A2E,#0D2040);border-color:rgba(31,184,201,.2);margin-bottom:1.25rem;padding:0;overflow:hidden">
+    
+    <div style="padding:1.75rem 2rem;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div>
+          <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem">
+            <div style="width:36px;height:36px;border-radius:8px;background:rgba(31,184,201,.15);display:flex;align-items:center;justify-content:center">
+              <i class="ti ti-anchor" style="font-size:16px;color:var(--a1)"></i>
+            </div>
+            <div>
+              <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--a1);font-weight:600">KBC membership fee</div>
+              <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:600;color:white">Karachi Boat Club</div>
+            </div>
+          </div>
+          <div style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.65;max-width:480px">
+            Annual outdoor membership. Transfer directly to KBC — no middleman, no fees.
           </div>
         </div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.65;max-width:480px">Annual outdoor membership. Required to access KBC creek sessions. Transfer directly to KBC's bank account — no middleman, no fees.</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:3px">Annual fee</div>
-        <div style="font-family:'Fraunces',serif;font-size:2rem;font-weight:700;color:white;letter-spacing:-.04em">PKR 15,000</div>
-        <div style="font-size:11px;color:#34D399;margin-top:3px"><i class="ti ti-check" style="font-size:11px"></i> Your membership is active</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BANK DETAILS -->
-  <div style="padding:1.5rem 2rem;border-bottom:1px solid rgba(255,255,255,.07)">
-    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:1rem;font-weight:600">Bank transfer details</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem">
-
-      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:1rem 1.1rem">
-        <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">Account title</div>
-        <div style="font-size:13px;font-weight:600;color:white">Karachi Boat Club</div>
-        <button onclick="navigator.clipboard.writeText('Karachi Boat Club').then(()=>toast('Account title copied ✓'))" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.3);font-size:11px;padding:4px 0;display:flex;align-items:center;gap:4px;margin-top:5px;transition:color .15s;font-family:Inter,sans-serif" onmouseover="this.style.color='var(--a1)'" onmouseout="this.style.color='rgba(255,255,255,.3)'"><i class="ti ti-copy" style="font-size:12px"></i>Copy</button>
-      </div>
-
-      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:1rem 1.1rem">
-        <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">Account number</div>
-        <div style="font-size:13px;font-weight:600;color:white;font-variant-numeric:tabular-nums">0123-XXXX-XXXX</div>
-        <button onclick="navigator.clipboard.writeText('0123XXXXXXXX').then(()=>toast('Account number copied ✓'))" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.3);font-size:11px;padding:4px 0;display:flex;align-items:center;gap:4px;margin-top:5px;transition:color .15s;font-family:Inter,sans-serif" onmouseover="this.style.color='var(--a1)'" onmouseout="this.style.color='rgba(255,255,255,.3)'"><i class="ti ti-copy" style="font-size:12px"></i>Copy</button>
-      </div>
-
-      <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:1rem 1.1rem">
-        <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">Bank</div>
-        <div style="font-size:13px;font-weight:600;color:white">MCB Bank Ltd</div>
-        <button onclick="navigator.clipboard.writeText('MCB Bank Ltd').then(()=>toast('Bank name copied ✓'))" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,.3);font-size:11px;padding:4px 0;display:flex;align-items:center;gap:4px;margin-top:5px;transition:color .15s;font-family:Inter,sans-serif" onmouseover="this.style.color='var(--a1)'" onmouseout="this.style.color='rgba(255,255,255,.3)'"><i class="ti ti-copy" style="font-size:12px"></i>Copy</button>
-      </div>
-
-    </div>
-
-    <div style="margin-top:1rem;padding:.85rem 1.1rem;background:rgba(251,183,36,.07);border:1px solid rgba(251,183,36,.15);border-radius:10px;display:flex;align-items:flex-start;gap:.75rem">
-      <i class="ti ti-info-circle" style="font-size:15px;color:#FBB724;flex-shrink:0;margin-top:1px"></i>
-      <div style="font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.65">
-        Use <strong style="color:white">your full name + "AKU RC"</strong> as the transfer description (e.g. <em style="color:rgba(255,255,255,.75)">Zara Hussain AKU RC</em>). This helps KBC match your payment. After transferring, upload your receipt below.
-      </div>
-    </div>
-  </div>
-
-  <!-- RECEIPT UPLOAD -->
-  <div style="padding:1.5rem 2rem">
-    <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:1rem;font-weight:600">Upload payment receipt</div>
-    <div style="display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:start">
-      <div>
-        <div id="drop-zone" style="border:2px dashed rgba(255,255,255,.1);border-radius:12px;padding:1.75rem;text-align:center;cursor:pointer;transition:all .2s"
-          onclick="toast('File picker opened — select your bank receipt screenshot')"
-          onmouseover="this.style.borderColor='rgba(31,184,201,.4)';this.style.background='rgba(31,184,201,.05)'"
-          onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.background='none'">
-          <i class="ti ti-upload" style="font-size:28px;color:rgba(255,255,255,.25);margin-bottom:.6rem;display:block"></i>
-          <div style="font-size:13px;font-weight:500;color:white;margin-bottom:3px">Drop receipt here or click to upload</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.3)">Screenshot or PDF from your banking app · max 5MB</div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:3px">Annual fee</div>
+          <div style="font-family:'Fraunces',serif;font-size:2rem;font-weight:700;color:white">PKR 15,000</div>
+          <div id="kbc-status-badge" style="font-size:11px;color:#34D399;margin-top:3px">
+            <i class="ti ti-check" style="font-size:11px"></i> Your membership is active
+          </div>
         </div>
-        <div style="margin-top:.6rem;font-size:11px;color:rgba(255,255,255,.3);text-align:center">Admin will confirm within 24 hours and your KBC status will update</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:.5rem">
-        <button class="btn btn-accent" onclick="toast('Receipt submitted · Admin will confirm within 24 hours ✓')"><i class="ti ti-send"></i>Submit receipt</button>
-        <button class="btn btn-outline btn-sm" onclick="toast('WhatsApp opening...')"><i class="ti ti-brand-whatsapp"></i>Send via WhatsApp</button>
+    </div>
+
+    <!-- BANK DETAILS -->
+    <div style="padding:1.5rem 2rem;border-bottom:1px solid rgba(255,255,255,.07)">
+      <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:1rem;font-weight:600">Bank transfer details</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem">
+        <div class="bank-field">
+          <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">Account title</div>
+          <div style="font-size:13px;font-weight:600;color:white">Karachi Boat Club</div>
+          <button class="copy-btn" onclick="copyText('Karachi Boat Club','Account title')">
+            <i class="ti ti-copy" style="font-size:12px"></i>Copy
+          </button>
+        </div>
+        <div class="bank-field">
+          <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">Account number</div>
+          <div style="font-size:13px;font-weight:600;color:white;font-variant-numeric:tabular-nums" id="kbc-acc-num">Update in settings</div>
+          <button class="copy-btn" onclick="copyText(document.getElementById('kbc-acc-num').textContent,'Account number')">
+            <i class="ti ti-copy" style="font-size:12px"></i>Copy
+          </button>
+        </div>
+        <div class="bank-field">
+          <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">Bank</div>
+          <div style="font-size:13px;font-weight:600;color:white">MCB Bank Ltd</div>
+          <button class="copy-btn" onclick="copyText('MCB Bank Ltd','Bank name')">
+            <i class="ti ti-copy" style="font-size:12px"></i>Copy
+          </button>
+        </div>
+      </div>
+      <div style="margin-top:1rem;padding:.85rem 1.1rem;background:rgba(251,183,36,.07);border:1px solid rgba(251,183,36,.15);border-radius:10px;display:flex;align-items:flex-start;gap:.75rem">
+        <i class="ti ti-info-circle" style="font-size:15px;color:#FBB724;flex-shrink:0;margin-top:1px"></i>
+        <div style="font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.65">
+          Use <strong style="color:white" id="transfer-name-hint">your full name + "AKU RC"</strong> as the transfer description. This helps KBC match your payment.
+        </div>
+      </div>
+    </div>
+
+    <!-- RECEIPT UPLOAD -->
+    <div style="padding:1.5rem 2rem">
+      <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:1rem;font-weight:600">Upload payment receipt</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:start">
+        <div>
+          <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+            ondragover="event.preventDefault();this.classList.add('drag')"
+            ondragleave="this.classList.remove('drag')"
+            ondrop="handleDrop(event)">
+            <input type="file" id="file-input" accept="image/*,.pdf" onchange="handleFile(this.files[0])">
+            <i class="ti ti-upload" style="font-size:28px;color:rgba(255,255,255,.25);margin-bottom:.6rem;display:block"></i>
+            <div id="drop-label" style="font-size:13px;font-weight:500;color:white;margin-bottom:3px">Drop receipt here or click to upload</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.3)">Screenshot or PDF from your banking app · max 5MB</div>
+          </div>
+          <div style="margin-top:.6rem;font-size:11px;color:rgba(255,255,255,.3);text-align:center">Admin will confirm within 24 hours</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem">
+          <button class="btn btn-accent" id="submit-btn" onclick="submitReceipt()" disabled style="opacity:.5">
+            <i class="ti ti-send"></i>Submit receipt
+          </button>
+          <div id="upload-progress" style="display:none;font-size:11px;color:var(--sub);text-align:center;padding:.5rem">Uploading...</div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- CLUB DUES SECTION -->
-<div class="card" style="margin-bottom:1.25rem">
-  <div class="card-head">
-    <div>
-      <div class="card-title">Club dues</div>
-      <div class="card-sub">Quarterly · PKR 6,000 · Paid to AKU Rowing Club</div>
+  <!-- PAYMENT HISTORY -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Payment history</div>
     </div>
-    <span class="badge b-green"><i class="ti ti-check"></i>Paid until Sep 2025</span>
+    <div id="payments-loading" style="padding:2rem;text-align:center;color:var(--sub);font-size:13px">
+      <i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px"></i>
+    </div>
+    <div class="tbl-wrap" id="payments-table" style="display:none">
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Paid to</th><th>Status</th><th>Receipt</th></tr></thead>
+        <tbody id="payments-tbody"></tbody>
+      </table>
+    </div>
+    <div id="payments-empty" style="display:none;padding:2rem;text-align:center;color:var(--sub);font-size:13px">
+      No payment records yet. Your admin will add your dues when they're due.
+    </div>
   </div>
-  <div style="padding:.85rem 1rem;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:10px;display:flex;align-items:center;gap:.75rem">
-    <i class="ti ti-circle-check" style="font-size:18px;color:#34D399;flex-shrink:0"></i>
-    <div style="font-size:13px;color:rgba(255,255,255,.8)">Your Q2 2025 dues were received on <strong>1 April 2025</strong>. Next payment due <strong>1 September 2025</strong>.</div>
-  </div>
+
 </div>
 
-<!-- PAYMENT HISTORY -->
-<div class="card">
-  <div class="card-head">
-    <div class="card-title">Payment history</div>
-    <button class="btn btn-outline btn-sm" onclick="v2('Download all receipts')"><i class="ti ti-download"></i>Download all</button>
-  </div>
-  <div class="tbl-wrap"><table class="tbl">
-    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Paid to</th><th>Status</th><th></th></tr></thead>
-    <tbody>
-      <tr><td>1 Apr 2025</td><td>Q2 club dues</td><td>PKR 6,000</td><td>AKU RC</td><td><span class="badge b-green">Confirmed</span></td><td><button class="btn btn-ghost btn-xs" onclick="v2('Download receipt')"><i class="ti ti-download"></i></button></td></tr>
-      <tr><td>1 Jan 2025</td><td>Q1 club dues</td><td>PKR 6,000</td><td>AKU RC</td><td><span class="badge b-green">Confirmed</span></td><td><button class="btn btn-ghost btn-xs" onclick="v2('Download receipt')"><i class="ti ti-download"></i></button></td></tr>
-      <tr><td>5 Oct 2024</td><td>KBC annual membership</td><td>PKR 15,000</td><td>Karachi Boat Club</td><td><span class="badge b-green">Confirmed</span></td><td><button class="btn btn-ghost btn-xs" onclick="v2('Download receipt')"><i class="ti ti-download"></i></button></td></tr>
-      <tr><td>1 Oct 2024</td><td>Q4 club dues</td><td>PKR 6,000</td><td>AKU RC</td><td><span class="badge b-green">Confirmed</span></td><td><button class="btn btn-ghost btn-xs" onclick="v2('Download receipt')"><i class="ti ti-download"></i></button></td></tr>
-      <tr><td>1 Jul 2024</td><td>Q3 club dues</td><td>PKR 6,000</td><td>AKU RC</td><td><span class="badge b-green">Confirmed</span></td><td><button class="btn btn-ghost btn-xs" onclick="v2('Download receipt')"><i class="ti ti-download"></i></button></td></tr>
-    </tbody>
-  </table></div>
-</div>
-</div>
-
-<div id="toasts"></div>
-<div class="overlay" id="v2-overlay" onclick="if(event.target===this)closeV2()">
-  <div class="modal">
-    <div class="modal-ico"><i class="ti ti-rocket"></i></div>
-    <div style="text-align:center"><span class="modal-badge" id="v2-label">Feature</span></div>
-    <h3>Coming in v2</h3>
-    <p id="v2-msg">This feature will be fully functional when AKU Rowing Club goes live with the production build.</p>
-    <button class="modal-close" onclick="closeV2()">Got it →</button>
-  </div>
-</div>
-<div id="demo-pill">
-  <span class="dot"></span>
-  <span>Demo mode · Data resets on refresh</span>
-  <span class="dx" onclick="this.parentElement.style.display='none'">✕</span>
-</div>
+<style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/auth.js"></script>
 <script>
-function toast(msg,type){
-  const c=document.getElementById('toasts');if(!c)return;
-  const el=document.createElement('div');
-  el.className='toast '+(type||'');
-  el.innerHTML='<i class="ti ti-check"></i><span>'+msg+'</span>';
-  c.appendChild(el);
-  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),220)},2800);
-  el.addEventListener('click',()=>{el.classList.add('out');setTimeout(()=>el.remove(),220)});
+let currentUser = null;
+let selectedFile = null;
+let pendingKbcPaymentId = null;
+
+// ─── INIT ─────────────────────────────────────────────
+(async () => {
+  const session = await requireAuth('member');
+  if (!session) return;
+  currentUser = session;
+
+  // Fill user UI
+  const p = session.profile;
+  document.getElementById('user-av').textContent = p.initials || p.full_name?.slice(0,2).toUpperCase();
+  document.getElementById('user-av').style.background = p.color || '#534AB7';
+  document.getElementById('user-name').textContent = p.full_name;
+
+  // Transfer hint with real name
+  document.getElementById('transfer-name-hint').textContent =
+    p.full_name + ' AKU RC';
+
+  // KBC status
+  const kbcBadge = document.getElementById('kbc-status-badge');
+  if (p.kbc_active) {
+    kbcBadge.innerHTML = '<i class="ti ti-check" style="font-size:11px"></i> Active · Renews ' + (p.kbc_renewal || 'Oct 2025');
+    kbcBadge.style.color = '#34D399';
+  } else {
+    kbcBadge.innerHTML = '<i class="ti ti-x" style="font-size:11px"></i> Not active — pay to activate';
+    kbcBadge.style.color = '#FC8585';
+  }
+
+  await loadPayments(p.id);
+})();
+
+// ─── LOAD PAYMENTS ────────────────────────────────────
+async function loadPayments(memberId) {
+  const { data: payments, error } = await db
+    .from('payments')
+    .select('*')
+    .eq('member_id', memberId)
+    .order('created_at', { ascending: false });
+
+  document.getElementById('payments-loading').style.display = 'none';
+
+  if (error || !payments?.length) {
+    document.getElementById('payments-empty').style.display = 'block';
+    updateStats([], currentUser.profile);
+    return;
+  }
+
+  // Stats
+  updateStats(payments, currentUser.profile);
+
+  // Table
+  const tbody = document.getElementById('payments-tbody');
+  tbody.innerHTML = payments.map(p => {
+    const statusColors = {
+      confirmed: 'b-green', submitted: 'b-blue',
+      pending: 'b-amber', overdue: 'b-red'
+    };
+    const statusLabels = {
+      confirmed: 'Confirmed', submitted: 'Receipt submitted',
+      pending: 'Pending', overdue: 'Overdue'
+    };
+    const date = new Date(p.created_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+    const receiptBtn = p.receipt_url
+      ? `<a href="${p.receipt_url}" target="_blank" class="btn btn-ghost btn-xs"><i class="ti ti-eye"></i></a>`
+      : (p.status === 'pending' && p.paid_to === 'Karachi Boat Club'
+          ? `<button class="btn btn-outline btn-xs" onclick="setPendingPayment('${p.id}')">Upload</button>`
+          : '—');
+
+    // Check if this is a KBC payment that's pending
+    if (p.paid_to === 'Karachi Boat Club' && (p.status === 'pending' || p.status === 'overdue')) {
+      pendingKbcPaymentId = p.id;
+    }
+
+    return `<tr>
+      <td style="font-size:12px">${date}</td>
+      <td style="font-weight:500;color:white">${p.description}</td>
+      <td style="font-variant-numeric:tabular-nums">PKR ${p.amount?.toLocaleString()}</td>
+      <td style="font-size:12px;color:var(--sub)">${p.paid_to}</td>
+      <td><span class="badge ${statusColors[p.status] || 'b-dim'}">${statusLabels[p.status] || p.status}</span></td>
+      <td>${receiptBtn}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('payments-table').style.display = 'block';
 }
-function v2(label){
-  document.getElementById('v2-label').textContent=label||'Feature';
-  document.getElementById('v2-overlay').classList.add('show');
+
+function setPendingPayment(id) {
+  pendingKbcPaymentId = id;
+  document.getElementById('drop-zone').click();
 }
-function closeV2(){document.getElementById('v2-overlay').classList.remove('show')}
-function nav(url){
-  const bar=document.createElement('div');bar.className='load-bar';
-  document.body.appendChild(bar);
-  document.body.style.opacity='.6';document.body.style.transition='opacity .15s';
-  setTimeout(()=>window.location=url,180);
+
+function updateStats(payments, profile) {
+  const outstanding = payments.filter(p => ['pending','overdue'].includes(p.status)).reduce((s,p) => s + (p.amount||0), 0);
+  const paid = payments.filter(p => p.status === 'confirmed').reduce((s,p) => s + (p.amount||0), 0);
+  const next = payments.find(p => p.status === 'pending' && p.due_date);
+
+  document.getElementById('stat-outstanding').textContent = outstanding > 0 ? 'PKR ' + outstanding.toLocaleString() : 'PKR 0';
+  document.getElementById('stat-outstanding-sub').textContent = outstanding > 0 ? outstanding > 0 ? 'Action needed' : '' : 'All caught up ✓';
+  document.getElementById('stat-outstanding-sub').className = 'stat-trend ' + (outstanding > 0 ? 'down' : 'up');
+
+  document.getElementById('stat-paid').textContent = paid > 0 ? 'PKR ' + paid.toLocaleString() : '—';
+
+  document.getElementById('stat-kbc').textContent = profile.kbc_active ? 'Active' : 'Inactive';
+  document.getElementById('stat-kbc').style.color = profile.kbc_active ? '#34D399' : '#FC8585';
+  document.getElementById('stat-kbc-sub').textContent = profile.kbc_active ? 'Renews ' + (profile.kbc_renewal || 'Oct 2025') : 'Payment required';
+
+  if (next) {
+    const d = new Date(next.due_date);
+    document.getElementById('stat-next').textContent = d.toLocaleDateString('en-GB', {month:'short',year:'numeric'});
+    document.getElementById('stat-next-sub').textContent = next.description;
+  } else {
+    document.getElementById('stat-next').textContent = 'None due';
+  }
 }
-window.toast=toast;window.v2=v2;window.closeV2=closeV2;window.nav=nav;
 
-const V2_PATTERNS=[/^(Edit|View details|Download|Replace|Reply|Reset password|Export CSV|Send email|Comment|Mark paid|Reschedule|Build lineup|Send invites|Schedule|Publish|Open$|Manage$|Select$|Notify|Confirm|Pay outstanding|Save changes|Sign in)$/i];
-const isV2=(t)=>V2_PATTERNS.some(p=>p.test(t.trim()));
+// ─── FILE HANDLING ────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
 
-document.addEventListener('DOMContentLoaded',()=>{
-  // Smooth nav
-  document.querySelectorAll('a[href]:not([href^="#"]):not([href^="mailto"]):not([target])').forEach(a=>{
-    a.addEventListener('click',e=>{
-      const h=a.getAttribute('href');
-      if(h&&!h.startsWith('http')&&!h.startsWith('#')&&!e.ctrlKey&&!e.metaKey){
-        e.preventDefault();nav(h);
-      }
-    });
-  });
+function handleFile(file) {
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    toast('File too large — max 5MB');
+    return;
+  }
+  selectedFile = file;
+  document.getElementById('drop-label').textContent = '✓ ' + file.name;
+  document.getElementById('drop-label').style.color = 'var(--a1)';
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('submit-btn').style.opacity = '1';
+}
 
-  // Wire unwired buttons
-  document.querySelectorAll('button.btn:not([data-w]),a.btn:not([data-w])').forEach(b=>{
-    if(b.onclick)return;
-    const txt=(b.textContent||'').replace(/[→←↑↓]/g,'').trim();
-    if(!txt)return;
-    b.dataset.w='1';
-    b.addEventListener('click',e=>{
-      if(b.tagName==='A'&&b.getAttribute('href')&&b.getAttribute('href')!=='#')return;
-      e.preventDefault();
-      isV2(txt)?v2(txt):toast(txt+' ✓');
-    });
-  });
+// ─── SUBMIT RECEIPT ───────────────────────────────────
+async function submitReceipt() {
+  if (!selectedFile || !currentUser) return;
 
-  // # links
-  document.querySelectorAll('a[href="#"]:not([data-w])').forEach(a=>{
-    a.dataset.w='1';
-    a.addEventListener('click',e=>{
-      e.preventDefault();
-      v2((a.textContent||'').replace(/[→←]/g,'').trim().slice(0,42));
-    });
-  });
+  const btn = document.getElementById('submit-btn');
+  const prog = document.getElementById('upload-progress');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Uploading...';
+  prog.style.display = 'block';
 
-  // Forms
-  document.querySelectorAll('form:not([data-w])').forEach(f=>{
-    f.dataset.w='1';
-    f.addEventListener('submit',e=>{
-      e.preventDefault();
-      const b=f.querySelector('button[type=submit]');
-      toast((b?b.textContent:'Saved').replace(/[→←]/g,'').trim()+' ✓');
-    });
-  });
+  try {
+    // Upload file to Supabase Storage
+    const ext = selectedFile.name.split('.').pop();
+    const path = `receipts/${currentUser.user.id}/${Date.now()}.${ext}`;
 
-  // Filter pills — toggle active state
-  document.querySelectorAll('[data-filters]').forEach(group=>{
-    group.querySelectorAll('button').forEach(b=>{
-      b.addEventListener('click',()=>{
-        group.querySelectorAll('button').forEach(x=>{x.classList.remove('btn-accent');x.classList.add('btn-outline')});
-        b.classList.add('btn-accent');b.classList.remove('btn-outline');
-        toast('Filter: '+b.textContent.trim());
+    const { data: uploadData, error: uploadError } = await db.storage
+      .from('receipts')
+      .upload(path, selectedFile, { upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    // Get public URL
+    const { data: urlData } = db.storage.from('receipts').getPublicUrl(path);
+    const receiptUrl = urlData.publicUrl;
+
+    // Find the KBC payment to update, or create one
+    if (pendingKbcPaymentId) {
+      await db.from('payments')
+        .update({ status: 'submitted', receipt_url: receiptUrl })
+        .eq('id', pendingKbcPaymentId);
+    } else {
+      await db.from('payments').insert({
+        member_id: currentUser.user.id,
+        description: 'KBC Annual Membership 2025',
+        amount: 15000,
+        paid_to: 'Karachi Boat Club',
+        status: 'submitted',
+        receipt_url: receiptUrl,
+        due_date: '2025-10-01'
       });
-    });
-  });
+    }
 
-  // Table rows
-  document.querySelectorAll('.tbl tbody tr:not([data-w])').forEach(tr=>{
-    tr.dataset.w='1';
-    tr.addEventListener('click',e=>{
-      if(e.target.closest('button,a,input,select'))return;
-      const n=tr.querySelector('td')?.textContent.trim().slice(0,40)||'item';
-      v2('Detail view · '+n);
-    });
-  });
+    toast('Receipt submitted ✓ Admin will confirm within 24 hours');
+    btn.innerHTML = '<i class="ti ti-check"></i> Submitted';
+    prog.style.display = 'none';
+    setTimeout(() => loadPayments(currentUser.user.id), 1000);
 
-  // Search enter
-  document.querySelectorAll('.tb-search,[type=search]').forEach(inp=>{
-    inp.addEventListener('keypress',e=>{
-      if(e.key==='Enter'){e.preventDefault();toast('Searching: "'+inp.value+'"');}
-    });
-  });
+  } catch (err) {
+    toast('Upload failed: ' + err.message);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-send"></i> Submit receipt';
+    btn.style.opacity = '1';
+    prog.style.display = 'none';
+  }
+}
 
-  // Topbar buttons
-  document.querySelectorAll('.tb-btn:not([data-w])').forEach(b=>{
-    b.dataset.w='1';
-    b.addEventListener('click',e=>{e.preventDefault();v2(b.getAttribute('title')||'Feature')});
-  });
+// ─── COPY ─────────────────────────────────────────────
+function copyText(text, label) {
+  navigator.clipboard.writeText(text).then(() => toast(label + ' copied ✓'));
+}
 
-  // Logout
-  document.querySelectorAll('.sb-logout:not([data-w])').forEach(a=>{
-    a.dataset.w='1';const h=a.getAttribute('href')||'';
-    a.addEventListener('click',e=>{
-      if(!h||h==='#')return;
-      e.preventDefault();toast('Signing out...');setTimeout(()=>nav(h),600);
-    });
-  });
-
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeV2()});
-});
+// ─── TOAST ────────────────────────────────────────────
+function toast(msg) {
+  let c = document.getElementById('toasts');
+  if (!c) { c = document.createElement('div'); c.id = 'toasts'; document.body.appendChild(c); }
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = '<i class="ti ti-check"></i><span>' + msg + '</span>';
+  c.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; setTimeout(() => el.remove(), 300); }, 3000);
+}
 </script>
 </body></html>
