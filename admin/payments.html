@@ -583,17 +583,34 @@ function filterTable() {
 }
 
 async function viewReceipt(url) {
-  // Extract the path from the full URL
-  const match = url.match(/receipts\/(.+)$/);
-  if (!match) { window.open(url, '_blank'); return; }
-  const path = match[1];
+  try {
+    // Supabase storage URL format:
+    // https://xxx.supabase.co/storage/v1/object/public/receipts/PATH
+    // We need just the PATH part after 'receipts/'
+    // URL format: .../object/public/receipts/receipts/UUID/FILE.png
+    // Storage path needed: receipts/UUID/FILE.png (everything after /public/receipts/)
+    const marker = '/object/public/receipts/';
+    let path = '';
 
-  const { data, error } = await db.storage
-    .from('receipts')
-    .createSignedUrl(path, 60); // 60 second expiry
+    if (url.includes(marker)) {
+      path = url.split(marker)[1]; // gives: receipts/UUID/FILE.png
+    } else {
+      window.open(url, '_blank');
+      return;
+    }
 
-  if (error) { toast('Could not open receipt: ' + error.message); return; }
-  window.open(data.signedUrl, '_blank');
+    const { data, error } = await db.storage
+      .from('receipts')
+      .createSignedUrl(decodeURIComponent(path), 120);
+
+    if (error) {
+      toast('Error: ' + error.message + ' | path: ' + path);
+      return;
+    }
+    window.open(data.signedUrl, '_blank');
+  } catch(e) {
+    toast('Failed: ' + e.message);
+  }
 }
 
 function toast(msg) {
