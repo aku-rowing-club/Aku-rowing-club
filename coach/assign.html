@@ -3,6 +3,7 @@
 <title>Assign Workout — AKU Rowing Club Coach</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -270,13 +271,44 @@ svg.spark{overflow:visible}
 @media(max-width:900px){body{margin-left:0}.sidebar{display:none}}
 
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.piece-card{background:var(--surf2);border:1px solid var(--bd);border-radius:12px;padding:1.1rem;margin-bottom:.65rem;position:relative}
-.piece-card .piece-num{width:24px;height:24px;border-radius:50%;background:var(--ag);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.piece-type-btn{padding:7px 14px;border-radius:8px;border:1.5px solid var(--bd);background:rgba(255,255,255,.04);color:var(--sub);font-size:11.5px;font-weight:500;cursor:pointer;transition:all .18s;font-family:Inter,sans-serif}
-.piece-type-btn.active{background:var(--asoft);border-color:var(--a1);color:var(--a3)}
-.member-check{display:flex;align-items:center;gap:.65rem;padding:.55rem .75rem;border-radius:8px;cursor:pointer;transition:background .15s}
-.member-check:hover{background:rgba(255,255,255,.04)}
-.member-check input{accent-color:var(--a1)}
+
+/* LAYOUT */
+.assign-grid{display:grid;grid-template-columns:300px 1fr;gap:0;height:calc(100vh - 64px);overflow:hidden}
+.members-col{border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden}
+.members-head{padding:1rem;border-bottom:1px solid var(--bd);flex-shrink:0}
+.members-list{overflow-y:auto;flex:1}
+.member-row{display:flex;align-items:center;gap:.65rem;padding:.7rem 1rem;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--bd)}
+.member-row:hover{background:rgba(255,255,255,.04)}
+.member-row.selected{background:var(--asoft);border-left:3px solid var(--a1)}
+
+/* CONTEXT PANEL */
+.context-col{display:flex;flex-direction:column;overflow:hidden}
+.context-head{padding:1rem 1.5rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.context-body{flex:1;overflow-y:auto;padding:1.25rem 1.5rem}
+
+/* AVAILABILITY WEEK */
+.avail-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;margin-bottom:1.25rem}
+.avail-day{border-radius:10px;padding:.6rem .3rem;text-align:center;cursor:pointer;transition:all .2s;border:1.5px solid transparent;position:relative}
+.avail-day.indoor{background:rgba(79,142,247,.15);border-color:rgba(79,142,247,.3)}
+.avail-day.outdoor{background:rgba(31,184,201,.15);border-color:rgba(31,184,201,.3)}
+.avail-day.both{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3)}
+.avail-day.unavailable{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.15);opacity:.6}
+.avail-day.no-response{background:rgba(255,255,255,.04);border-color:var(--bd)}
+.avail-day.clickable:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.avail-day.selected-date{border-color:var(--a1)!important;box-shadow:0 0 0 2px var(--aglow)}
+.avail-day-name{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:3px}
+.avail-day-num{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;color:white;line-height:1}
+.avail-day-lbl{font-size:8px;color:var(--sub);margin-top:3px;font-weight:500}
+
+/* WORKOUT BUILDER */
+.piece-card{background:var(--surf2);border:1px solid var(--bd);border-radius:10px;padding:1rem;margin-bottom:.5rem}
+.piece-num{width:22px;height:22px;border-radius:50%;background:var(--ag);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.type-btn{padding:6px 11px;border-radius:7px;border:1.5px solid var(--bd);background:transparent;color:var(--sub);font-size:10.5px;font-weight:500;cursor:pointer;transition:all .18s;font-family:Inter,sans-serif}
+.type-btn.active{background:var(--asoft);border-color:var(--a1);color:var(--a3)}
+.type-btn:hover:not(.active){border-color:var(--bd2);color:var(--text)}
+
+/* SEND BAR */
+.send-bar{padding:1rem 1.5rem;border-top:1px solid var(--bd);display:flex;align-items:center;gap:.75rem;flex-shrink:0;background:var(--surf)}
 </style>
 </head><body>
 <aside class="sidebar">
@@ -288,141 +320,151 @@ svg.spark{overflow:visible}
   </div>
   <nav class="sb-nav">
     <div class="sb-lbl">Coaching</div>
-    <a class="sb-a " href="dashboard.html"><i class="ti ti-home"></i>Dashboard</a>
-    <a class="sb-a " href="squad.html"><i class="ti ti-users"></i>Squad</a>
-    <a class="sb-a " href="groups.html"><i class="ti ti-users-group"></i>Training Groups</a>
-    <a class="sb-a " href="library.html"><i class="ti ti-books"></i>Workout Library</a>
+    <a class="sb-a" href="dashboard.html"><i class="ti ti-home"></i>Dashboard</a>
+    <a class="sb-a" href="squad.html"><i class="ti ti-users"></i>Squad</a>
+    <a class="sb-a" href="groups.html"><i class="ti ti-users-group"></i>Training Groups</a>
+    <a class="sb-a" href="library.html"><i class="ti ti-books"></i>Workout Library</a>
     <a class="sb-a on" href="assign.html"><i class="ti ti-pencil"></i>Assign Workout</a>
-    <a class="sb-a " href="planning.html"><i class="ti ti-calendar-event"></i>Weekly Planning</a>
-    <a class="sb-a " href="progress.html"><i class="ti ti-chart-line"></i>Member Progress</a>
-    <a class="sb-a " href="regattas.html"><i class="ti ti-anchor"></i>Regattas</a>
+    <a class="sb-a" href="planning.html"><i class="ti ti-calendar-event"></i>Weekly Planning</a>
+    <a class="sb-a" href="progress.html"><i class="ti ti-chart-line"></i>Member Progress</a>
+    <a class="sb-a" href="regattas.html"><i class="ti ti-anchor"></i>Regattas</a>
   </nav>
   <div class="sb-foot">
     <a class="sb-logout" href="#" onclick="signOut()"><i class="ti ti-arrow-left"></i>Sign out</a>
     <div class="sb-version">v1.0</div>
   </div>
 </aside>
+
+<!-- TOPBAR -->
 <div class="topbar">
-  <div><div class="tb-title" id="page-title">Coach Portal</div></div>
+  <div><div class="tb-title">Assign Workout</div></div>
   <div class="tb-right">
     <div class="tb-user">
       <div class="tb-av" id="user-av" style="background:linear-gradient(135deg,#E8335A,#8B3FE0)">CI</div>
-      <span class="tb-name" id="user-name">Loading...</span>
+      <span class="tb-name" id="user-name">Coach</span>
     </div>
   </div>
 </div>
 
-<div class="page" id="main-page" style="display:none">
-  <div class="pg-head">
-    <div><h1>Assign Workout</h1><div class="sub">Build or pick a workout, select members, adjust targets, send.</div></div>
-    <button class="btn btn-outline" onclick="history.back()"><i class="ti ti-x"></i>Cancel</button>
+<div class="assign-grid" id="main-page" style="display:none">
+
+  <!-- LEFT: MEMBER LIST -->
+  <div class="members-col">
+    <div class="members-head">
+      <input class="inp" placeholder="Search members..." id="member-search" oninput="filterMembers()" style="font-size:12px">
+      <div style="display:flex;gap:.35rem;margin-top:.5rem;flex-wrap:wrap">
+        <button class="type-btn active" onclick="setDisciplineFilter('all',this)">All</button>
+        <button class="type-btn" onclick="setDisciplineFilter('Indoor',this)">Indoor</button>
+        <button class="type-btn" onclick="setDisciplineFilter('Outdoor',this)">Outdoor</button>
+        <button class="type-btn" onclick="setDisciplineFilter('Both',this)">Both</button>
+      </div>
+    </div>
+    <div class="members-list" id="member-list"></div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:1.25rem">
+  <!-- RIGHT: CONTEXT + BUILDER -->
+  <div class="context-col">
 
-    <!-- LEFT: WORKOUT BUILDER -->
-    <div style="display:flex;flex-direction:column;gap:1rem">
+    <!-- EMPTY STATE -->
+    <div id="empty-state" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.75rem;color:var(--sub)">
+      <i class="ti ti-arrow-left" style="font-size:32px;opacity:.3"></i>
+      <div style="font-size:14px">Select a member to start</div>
+    </div>
 
-      <!-- Step 1: Pick or build -->
-      <div class="card">
-        <div class="card-head"><div class="card-title">Step 1 · Workout</div>
-          <div style="display:flex;gap:.4rem">
-            <button class="btn btn-accent btn-sm" id="tab-library" onclick="switchTab('library')">From library</button>
-            <button class="btn btn-outline btn-sm" id="tab-custom" onclick="switchTab('custom')">Build custom</button>
+    <!-- MEMBER CONTEXT (hidden until selected) -->
+    <div id="member-context" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+      <div class="context-head">
+        <div style="display:flex;align-items:center;gap:.85rem">
+          <div class="av" style="width:42px;height:42px;font-size:14px" id="ctx-av">?</div>
+          <div>
+            <div style="font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;color:white" id="ctx-name">—</div>
+            <div style="font-size:11px;color:var(--sub)" id="ctx-sub">—</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-outline btn-sm" onclick="clearMember()"><i class="ti ti-x"></i>Change</button>
+        </div>
+      </div>
+
+      <div class="context-body">
+
+        <!-- AVAILABILITY THIS WEEK -->
+        <div style="margin-bottom:1.5rem">
+          <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:.75rem;font-weight:600">
+            This week's availability — click a free slot to assign
+          </div>
+          <div class="avail-grid" id="avail-grid"></div>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub)"><span style="width:8px;height:8px;border-radius:2px;background:rgba(79,142,247,.4)"></span>Indoor</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub)"><span style="width:8px;height:8px;border-radius:2px;background:rgba(31,184,201,.4)"></span>Outdoor</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub)"><span style="width:8px;height:8px;border-radius:2px;background:rgba(52,211,153,.25)"></span>Both</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub)"><span style="width:8px;height:8px;border-radius:2px;background:rgba(239,68,68,.2)"></span>Unavailable</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub)"><span style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.06)"></span>No response</div>
           </div>
         </div>
 
-        <!-- LIBRARY TAB -->
-        <div id="tab-library-content">
-          <select class="sel" id="library-select" onchange="loadLibraryWorkout()" style="margin-bottom:.85rem">
-            <option value="">— Select from library —</option>
-          </select>
-          <div id="library-preview" style="display:none"></div>
+        <!-- LAST 3 WORKOUTS -->
+        <div style="margin-bottom:1.5rem">
+          <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:.75rem;font-weight:600">Last 3 sessions</div>
+          <div id="last-sessions" style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="text-align:center;padding:1rem;color:var(--sub);font-size:12px"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i></div>
+          </div>
         </div>
 
-        <!-- CUSTOM BUILD TAB -->
-        <div id="tab-custom-content" style="display:none">
-          <div style="margin-bottom:.85rem">
-            <label class="lbl">Workout name *</label>
-            <input class="inp" id="workout-name" placeholder="e.g. Race pace intervals 4×8min">
+        <!-- WORKOUT BUILDER -->
+        <div style="border-top:1px solid var(--bd);padding-top:1.25rem">
+          <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:.75rem;font-weight:600">Build workout</div>
+
+          <!-- FROM LIBRARY OR CUSTOM -->
+          <div style="display:flex;gap:.4rem;margin-bottom:.85rem">
+            <button class="type-btn active" id="tab-lib" onclick="switchBuilderTab('library')">From library</button>
+            <button class="type-btn" id="tab-cust" onclick="switchBuilderTab('custom')">Build custom</button>
           </div>
 
-          <!-- PIECE BUILDER -->
-          <div style="margin-bottom:.75rem">
-            <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:.65rem;font-weight:600">Pieces</div>
+          <!-- LIBRARY -->
+          <div id="builder-library">
+            <select class="sel" id="library-select" onchange="previewLibraryWorkout()" style="margin-bottom:.65rem;font-size:12px">
+              <option value="">— Select workout —</option>
+            </select>
+            <div id="lib-preview" style="display:none"></div>
+          </div>
+
+          <!-- CUSTOM -->
+          <div id="builder-custom" style="display:none">
+            <div style="margin-bottom:.65rem">
+              <label class="lbl">Workout name *</label>
+              <input class="inp" id="w-name" placeholder="e.g. Base endurance 45min" style="font-size:12px">
+            </div>
             <div id="pieces-list"></div>
-            <button class="btn btn-outline btn-sm" onclick="addPiece()" style="width:100%;justify-content:center">
+            <button class="btn btn-outline btn-sm" onclick="addPiece()" style="width:100%;justify-content:center;margin-bottom:.85rem">
               <i class="ti ti-plus"></i>Add piece
             </button>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr;gap:.65rem">
-            <div><label class="lbl">Coach notes</label>
-              <textarea class="textarea" id="workout-notes" placeholder="Instructions for the member..." style="min-height:70px"></textarea>
+            <div>
+              <label class="lbl">Coach notes</label>
+              <textarea class="textarea" id="w-notes" placeholder="Instructions for the member..." style="min-height:60px;font-size:12px"></textarea>
             </div>
-          </div>
-
-          <div style="display:flex;gap:.5rem;margin-top:.85rem">
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);cursor:pointer">
-              <input type="checkbox" id="save-to-library" checked style="accent-color:var(--a1)">
-              Save to library for reuse
+            <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub);cursor:pointer;margin-top:.65rem">
+              <input type="checkbox" id="save-lib" checked style="accent-color:var(--a1)">Save to library
             </label>
           </div>
         </div>
       </div>
 
-      <!-- Step 2: Schedule -->
-      <div class="card">
-        <div class="card-head"><div class="card-title">Step 2 · Schedule</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem">
-          <div><label class="lbl">Date *</label>
-            <input class="inp" type="date" id="sched-date"></div>
-          <div><label class="lbl">Session time (optional)</label>
-            <input class="inp" type="time" id="sched-time"></div>
+      <!-- SEND BAR -->
+      <div class="send-bar">
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--sub)">Assigning to <strong style="color:white" id="send-name">—</strong></div>
+          <div style="font-size:11px;color:var(--dim);margin-top:2px" id="send-date-label">Select a slot above</div>
         </div>
-        <label style="display:flex;align-items:center;gap:8px;padding:.75rem;background:var(--surf2);border-radius:8px;cursor:pointer;font-size:13px;color:var(--text);margin-top:.65rem">
-          <input type="checkbox" id="notify-members" checked style="accent-color:var(--a1)">
-          Notify assigned members by email
-        </label>
+        <div style="display:flex;align-items:center;gap:.65rem">
+          <label style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--sub);cursor:pointer;white-space:nowrap">
+            <input type="checkbox" id="notify-cb" checked style="accent-color:var(--a1)">Notify
+          </label>
+          <button class="btn btn-accent" id="send-btn" onclick="assignWorkout()" disabled style="opacity:.5">
+            <i class="ti ti-send"></i>Assign
+          </button>
+        </div>
       </div>
-    </div>
-
-    <!-- RIGHT: MEMBER SELECTION -->
-    <div style="display:flex;flex-direction:column;gap:1rem">
-      <div class="card" style="flex:1">
-        <div class="card-head">
-          <div><div class="card-title">Step 3 · Members</div><div class="card-sub" id="selected-count">0 selected</div></div>
-        </div>
-
-        <!-- GROUP QUICK SELECT -->
-        <div style="margin-bottom:.85rem">
-          <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem">Quick select</div>
-          <div style="display:flex;gap:.4rem;flex-wrap:wrap" id="group-buttons">
-            <button class="btn btn-outline btn-xs" onclick="selectAll()">All members</button>
-            <button class="btn btn-outline btn-xs" onclick="selectByDiscipline('Indoor')">Indoor</button>
-            <button class="btn btn-outline btn-xs" onclick="selectByDiscipline('Outdoor')">Outdoor</button>
-            <button class="btn btn-outline btn-xs" onclick="selectByDiscipline('Both')">Both</button>
-          </div>
-          <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem" id="custom-group-buttons"></div>
-        </div>
-
-        <input class="inp" placeholder="Search members..." id="member-search" oninput="filterMembers()" style="margin-bottom:.65rem;font-size:12px">
-
-        <div id="member-list" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:.25rem"></div>
-      </div>
-
-      <!-- INDIVIDUAL OVERRIDES -->
-      <div class="card" id="overrides-card" style="display:none">
-        <div class="card-head">
-          <div><div class="card-title">Target overrides</div><div class="card-sub">Adjust targets per member</div></div>
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('overrides-card').style.display='none'">✕</button>
-        </div>
-        <div id="overrides-list" style="display:flex;flex-direction:column;gap:.65rem"></div>
-      </div>
-
-      <button class="btn btn-accent" style="padding:14px;font-size:13px" onclick="assignWorkout()" id="assign-btn">
-        <i class="ti ti-send"></i>Assign to selected members
-      </button>
     </div>
   </div>
 </div>
@@ -430,417 +472,431 @@ svg.spark{overflow:visible}
 <div id="loading-page" style="display:flex;align-items:center;justify-content:center;min-height:60vh">
   <i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:32px;color:var(--a1)"></i>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/auth.js"></script>
 <script>
-async function coachInit() {
-  const { data: { session } } = await db.auth.getSession();
-  if (!session) { window.location.replace('../login.html'); return null; }
-  const { data: profile } = await db.from('profiles').select('*').eq('id', session.user.id).single();
-  if (!profile || !['coach','admin'].includes(profile.admin_role)) {
-    window.location.replace('../login.html'); return null;
-  }
-  const av = document.getElementById('user-av');
-  const nm = document.getElementById('user-name');
-  if (av) { av.textContent = profile.initials || 'CI'; av.style.background = 'linear-gradient(135deg,#E8335A,#8B3FE0)'; }
-  if (nm) nm.textContent = profile.full_name || 'Coach';
-  return { user: session.user, profile };
-}
-function toast(msg) {
-  let c = document.getElementById('toasts');
-  if (!c) { c = document.createElement('div'); c.id='toasts'; c.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px'; document.body.appendChild(c); }
-  const el = document.createElement('div'); el.className='toast';
-  el.innerHTML='<i class="ti ti-check"></i><span>'+msg+'</span>';
-  c.appendChild(el);
-  setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>el.remove(),300); },3500);
-}
-</script>
-<script>
 let allMembers = [];
-let selectedMembers = new Set();
-let pieces = [];
-let currentTab = 'library';
 let libraryWorkouts = [];
+let selectedMember = null;
+let selectedDate = null;
+let pieces = [];
+let builderTab = 'library';
 let coachId = null;
+let disciplineFilter = 'all';
 
+const DAYS = ['sun','mon','tue','wed','thu','fri','sat'];
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const PIECE_TYPES = [
-  { key:'single_distance', label:'Distance', icon:'ti-ruler' },
-  { key:'single_time', label:'Timed', icon:'ti-clock' },
-  { key:'distance_intervals', label:'Dist. intervals', icon:'ti-repeat' },
-  { key:'timed_intervals', label:'Timed intervals', icon:'ti-repeat' },
-  { key:'variable_intervals', label:'Variable', icon:'ti-adjustments' },
+  {key:'single_distance',label:'Distance'},
+  {key:'single_time',label:'Timed'},
+  {key:'distance_intervals',label:'Dist. intervals'},
+  {key:'timed_intervals',label:'Timed intervals'},
+  {key:'variable_intervals',label:'Variable'},
 ];
 
 (async () => {
-  const session = await coachInit();
-  if (!session) return;
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) { window.location.replace('../login.html'); return; }
+  const { data: profile } = await db.from('profiles').select('*').eq('id',session.user.id).single();
+  if (!profile||!['coach','admin'].includes(profile.admin_role)) { window.location.replace('../login.html'); return; }
   coachId = session.user.id;
+  document.getElementById('user-av').textContent = profile.initials||'CI';
+  document.getElementById('user-name').textContent = profile.full_name||'Coach';
 
-  // Set default date to tomorrow
-  const tmr = new Date(); tmr.setDate(tmr.getDate()+1);
-  document.getElementById('sched-date').value = tmr.toISOString().split('T')[0];
-
-  // Load members and library in parallel
-  const [membersRes, libraryRes, groupsRes] = await Promise.all([
+  const [membersRes, libraryRes] = await Promise.all([
     db.from('profiles').select('*').eq('portal_role','member').order('full_name'),
-    db.from('workouts').select('*').eq('is_template', true).order('title'),
-    db.from('training_groups').select('*, members:group_members(member_id)'),
+    db.from('workouts').select('*').eq('is_template',true).order('title'),
   ]);
 
-  allMembers = membersRes.data || [];
-  libraryWorkouts = libraryRes.data || [];
-  const groups = groupsRes.data || [];
+  allMembers = membersRes.data||[];
+  libraryWorkouts = libraryRes.data||[];
 
-  // Populate library dropdown
+  // Populate library
   const sel = document.getElementById('library-select');
   libraryWorkouts.forEach(w => {
-    const opt = document.createElement('option');
-    opt.value = w.id; opt.textContent = w.title;
-    sel.appendChild(opt);
+    const o = document.createElement('option');
+    o.value=w.id; o.textContent=w.title;
+    sel.appendChild(o);
   });
 
-  // Custom group buttons
-  const cgb = document.getElementById('custom-group-buttons');
-  groups.forEach(g => {
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-outline btn-xs';
-    btn.textContent = g.name;
-    btn.onclick = () => selectGroup(g.members.map(m=>m.member_id));
-    cgb.appendChild(btn);
-  });
+  renderMemberList(allMembers);
+  addPiece();
 
-  renderMembers(allMembers);
-  addPiece(); // Start with one piece
-
-  document.getElementById('loading-page').style.display = 'none';
-  document.getElementById('main-page').style.display = 'block';
+  document.getElementById('loading-page').style.display='none';
+  document.getElementById('main-page').style.display='grid';
 })();
 
-// ─── TABS ─────────────────────────────────────────────
-function switchTab(tab) {
-  currentTab = tab;
-  document.getElementById('tab-library-content').style.display = tab==='library'?'block':'none';
-  document.getElementById('tab-custom-content').style.display = tab==='custom'?'block':'none';
-  document.getElementById('tab-library').className = 'btn btn-'+(tab==='library'?'accent':'outline')+' btn-sm';
-  document.getElementById('tab-custom').className = 'btn btn-'+(tab==='custom'?'accent':'outline')+' btn-sm';
+// ─── MEMBER LIST ─────────────────────────────────────
+function filterMembers() {
+  const q = document.getElementById('member-search').value.toLowerCase();
+  let filtered = allMembers.filter(m => (m.full_name||'').toLowerCase().includes(q));
+  if (disciplineFilter !== 'all') filtered = filtered.filter(m => m.discipline===disciplineFilter||m.discipline==='Both');
+  renderMemberList(filtered);
 }
 
-// ─── LIBRARY ──────────────────────────────────────────
-function loadLibraryWorkout() {
-  const id = document.getElementById('library-select').value;
-  const w = libraryWorkouts.find(x => x.id === id);
-  const preview = document.getElementById('library-preview');
-  if (!w) { preview.style.display='none'; return; }
+function setDisciplineFilter(f, btn) {
+  disciplineFilter = f;
+  document.querySelectorAll('.members-head .type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterMembers();
+}
 
-  preview.style.display = 'block';
-  preview.innerHTML = `
-    <div style="padding:1rem;background:var(--surf2);border-radius:10px;border-left:3px solid var(--a1)">
-      <div style="font-family:'Fraunces',serif;font-size:1rem;font-weight:600;color:white;margin-bottom:6px">${w.title}</div>
-      <div style="font-size:12.5px;color:var(--sub);line-height:1.65;margin-bottom:.65rem">${w.description||'No description'}</div>
-      ${(w.pieces||[]).map((p,i) => `
-        <div style="display:flex;align-items:center;gap:.65rem;padding:.5rem;background:var(--surf3);border-radius:8px;margin-bottom:.35rem">
-          <div class="piece-num">${i+1}</div>
-          <div style="font-size:12px;color:var(--text);flex:1">${formatPiece(p)}</div>
-        </div>`).join('')}
-      ${w.pieces?.length===0?'<div style="font-size:12px;color:var(--dim)">No pieces defined</div>':''}
+function renderMemberList(members) {
+  document.getElementById('member-list').innerHTML = members.map(m => {
+    const disc = m.discipline==='Indoor'?'b-indoor':m.discipline==='Outdoor'?'b-outdoor':'b-teal';
+    const isSelected = selectedMember?.id === m.id;
+    return `<div class="member-row ${isSelected?'selected':''}" onclick="selectMember('${m.id}')">
+      <div class="av" style="width:32px;height:32px;font-size:11px;background:${m.color||'#1FB8C9'}">${m.initials||'?'}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:${isSelected?'600':'400'};color:white">${m.full_name}</div>
+        <div style="font-size:10px;color:var(--sub)">${m.programme||''} ${m.grad_year||''}</div>
+      </div>
+      <span class="badge ${disc}" style="font-size:9px">${m.discipline||'—'}</span>
     </div>`;
+  }).join('') || '<div style="text-align:center;padding:2rem;color:var(--sub);font-size:13px">No members found</div>';
 }
 
-function formatPiece(p) {
-  if (p.type==='single_distance') return `${p.distance}m · Target: ${p.split||'—'} @ R${p.rate||'—'}`;
-  if (p.type==='single_time') return `${Math.floor(p.duration/60)}:${String(p.duration%60).padStart(2,'0')} min · Target: ${p.split||'—'} @ R${p.rate||'—'}`;
-  if (p.type==='distance_intervals') return `${p.reps}×${p.distance}m · ${p.split||'—'} @ R${p.rate||'—'} · Rest ${p.rest||0}s`;
-  if (p.type==='timed_intervals') return `${p.reps}×${Math.floor(p.duration/60)}min · ${p.split||'—'} @ R${p.rate||'—'} · Rest ${p.rest||0}s`;
+// ─── SELECT MEMBER ────────────────────────────────────
+async function selectMember(id) {
+  selectedMember = allMembers.find(m=>m.id===id);
+  if (!selectedMember) return;
+  selectedDate = null;
+  updateSendBar();
+
+  // Update list highlight
+  renderMemberList(allMembers.filter(m => {
+    const q = document.getElementById('member-search').value.toLowerCase();
+    return !q || (m.full_name||'').toLowerCase().includes(q);
+  }));
+
+  // Show context panel
+  document.getElementById('empty-state').style.display='none';
+  document.getElementById('member-context').style.display='flex';
+
+  // Fill header
+  const av = document.getElementById('ctx-av');
+  av.textContent = selectedMember.initials||'?';
+  av.style.background = selectedMember.color||'#1FB8C9';
+  document.getElementById('ctx-name').textContent = selectedMember.full_name;
+  document.getElementById('ctx-sub').textContent = [selectedMember.programme,selectedMember.grad_year,selectedMember.discipline].filter(Boolean).join(' · ');
+  document.getElementById('send-name').textContent = selectedMember.full_name;
+
+  // Load in parallel
+  const now = new Date();
+  const day = now.getDay();
+  const mon = new Date(now);
+  mon.setDate(now.getDate()-(day===0?6:day-1));
+  const weekStart = mon.toISOString().split('T')[0];
+
+  const [availRes, logsRes] = await Promise.all([
+    db.from('availability').select('*').eq('member_id',id).eq('week_start',weekStart).maybeSingle(),
+    db.from('workout_logs').select('*, assigned:assigned_workouts(workout:workouts(title,type))')
+      .eq('member_id',id).order('logged_date',{ascending:false}).limit(3),
+  ]);
+
+  renderAvailability(mon, availRes.data);
+  renderLastSessions(logsRes.data||[]);
+}
+
+function clearMember() {
+  selectedMember = null; selectedDate = null;
+  document.getElementById('empty-state').style.display='flex';
+  document.getElementById('member-context').style.display='none';
+  renderMemberList(allMembers);
+}
+
+// ─── AVAILABILITY GRID ────────────────────────────────
+function renderAvailability(weekMonday, avail) {
+  const grid = document.getElementById('avail-grid');
+  grid.innerHTML = DAY_NAMES.map((name,i) => {
+    const date = new Date(weekMonday);
+    date.setDate(weekMonday.getDate()+i);
+    const dayKey = DAYS[(i+1)%7]; // Mon=1, shift from sun=0
+    const correctedKey = ['mon','tue','wed','thu','fri','sat','sun'][i];
+    const status = avail?.[correctedKey] || 'no-response';
+    const isAvail = status!=='unavailable'&&status!=='no-response';
+    const today = new Date().toISOString().split('T')[0];
+    const dateStr = date.toISOString().split('T')[0];
+    const isPast = dateStr < today;
+    const statusLabel = {indoor:'Indoor',outdoor:'Outdoor',both:'Both','unavailable':'Busy','no-response':'?'}[status]||status;
+
+    return `<div class="avail-day ${status} ${isAvail&&!isPast?'clickable':''} ${selectedDate===dateStr?'selected-date':''}"
+      onclick="${isAvail&&!isPast?`pickDate('${dateStr}')`:''}"
+      style="${isPast?'opacity:.4;cursor:default':''}"
+      title="${{'indoor':'Indoor available','outdoor':'Outdoor available','both':'Both available','unavailable':'Not available','no-response':'No response submitted'}[status]}">
+      <div class="avail-day-name">${name}</div>
+      <div class="avail-day-num">${date.getDate()}</div>
+      <div class="avail-day-lbl">${statusLabel}</div>
+    </div>`;
+  }).join('');
+}
+
+function pickDate(dateStr) {
+  selectedDate = dateStr;
+  // Re-render availability to update selected highlight
+  const grid = document.getElementById('avail-grid');
+  grid.querySelectorAll('.avail-day').forEach((el,i) => {
+    const date = new Date(dateStr);
+    const mon = new Date(date); mon.setDate(date.getDate()-(date.getDay()===0?6:date.getDay()-1));
+    const d = new Date(mon); d.setDate(mon.getDate()+i);
+    el.classList.toggle('selected-date', d.toISOString().split('T')[0]===dateStr);
+  });
+  updateSendBar();
+}
+
+// ─── LAST SESSIONS ────────────────────────────────────
+function renderLastSessions(logs) {
+  const el = document.getElementById('last-sessions');
+  if (!logs.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--sub);padding:.5rem 0">No sessions logged yet.</div>';
+    return;
+  }
+  const moodIcons = {'💪 Strong':'💪','😊 Good':'😊','🔥 Crushed it':'🔥','😌 Easy':'😌','😤 Tough':'😤','🌅 Peaceful':'🌅'};
+  el.innerHTML = logs.map(l => {
+    const title = l.assigned?.workout?.title || 'Session';
+    const date = new Date(l.logged_date).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    const mood = moodIcons[l.mood]||'';
+    const diff = l.difficulty||'';
+    return `<div style="display:flex;align-items:center;gap:.75rem;padding:.65rem;background:var(--surf2);border-radius:9px">
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--surf3);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">
+        <div style="font-size:7px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em">${date.split(' ')[1]}</div>
+        <div style="font-family:'Fraunces',serif;font-size:1rem;font-weight:700;color:white;line-height:1">${date.split(' ')[0]}</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
+        <div style="font-size:11px;color:var(--sub)">${l.total_meters?.toLocaleString()||'—'}m · ${l.avg_split||'—'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:14px">${mood}</div>
+        <div style="font-size:9px;color:var(--dim)">${diff}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── WORKOUT BUILDER ─────────────────────────────────
+function switchBuilderTab(tab) {
+  builderTab = tab;
+  document.getElementById('builder-library').style.display = tab==='library'?'block':'none';
+  document.getElementById('builder-custom').style.display = tab==='custom'?'block':'none';
+  document.getElementById('tab-lib').className = 'type-btn'+(tab==='library'?' active':'');
+  document.getElementById('tab-cust').className = 'type-btn'+(tab==='custom'?' active':'');
+}
+
+function previewLibraryWorkout() {
+  const id = document.getElementById('library-select').value;
+  const w = libraryWorkouts.find(x=>x.id===id);
+  const preview = document.getElementById('lib-preview');
+  if (!w) { preview.style.display='none'; return; }
+  preview.style.display='block';
+  const pieces = w.pieces||[];
+  preview.innerHTML = `<div style="padding:.85rem;background:var(--surf2);border-radius:10px;border-left:3px solid var(--a1)">
+    ${w.description?`<div style="font-size:12px;color:var(--sub);margin-bottom:.65rem">${w.description}</div>`:''}    ${pieces.map((p,i)=>`<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;background:var(--surf3);border-radius:7px;margin-bottom:.3rem">
+      <div class="piece-num">${i+1}</div>
+      <span style="font-size:11.5px;color:var(--text)">${fmtPiece(p)}</span>
+    </div>`).join('')}
+    ${!pieces.length?'<div style="font-size:11px;color:var(--dim)">No pieces defined</div>':''}
+  </div>`;
+}
+
+function fmtPiece(p) {
+  if (!p) return '—';
+  if (p.type==='single_distance') return `${p.distance}m · ${p.split||'—'} @ R${p.rate||'—'}`;
+  if (p.type==='single_time') return `${p.duration_min||Math.floor((p.duration||0)/60)}min · ${p.split||'—'} @ R${p.rate||'—'}`;
+  if (p.type==='distance_intervals') {
+    const reps = p.rep_targets||[];
+    if (reps.length) return `${reps.length}×${p.distance}m · ${reps.map(r=>r.split||'—').join('/')}`;
+    return `${p.reps||'?'}×${p.distance}m · ${p.split||'—'}`;
+  }
+  if (p.type==='timed_intervals') {
+    const reps = p.rep_targets||[];
+    return `${reps.length||p.reps||'?'}×${p.duration_min||Math.floor((p.duration||0)/60)}min`;
+  }
   if (p.type==='variable_intervals') return `Variable · ${(p.sub_pieces||[]).length} pieces`;
-  return JSON.stringify(p);
+  return '—';
 }
 
-// ─── PIECE BUILDER ────────────────────────────────────
+// Piece builder
 function addPiece() {
   const id = Date.now();
-  pieces.push({ id, type:'single_distance', distance:2000, split:'', rate:'', rest:0 });
+  pieces.push({id,type:'single_distance',distance:2000,split:'',rate:'',rest:0,rep_targets:[{split:'',rate:'',rest:''}]});
   renderPieces();
 }
 
-function removePiece(id) {
-  pieces = pieces.filter(p => p.id !== id);
-  renderPieces();
-}
+function removePiece(id) { pieces=pieces.filter(p=>p.id!==id); renderPieces(); }
 
 function renderPieces() {
-  const list = document.getElementById('pieces-list');
-  if (!pieces.length) { list.innerHTML=''; return; }
-
-  list.innerHTML = pieces.map((p, i) => `
+  document.getElementById('pieces-list').innerHTML = pieces.map((p,i) => `
     <div class="piece-card">
-      <div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.85rem">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap">
         <div class="piece-num">${i+1}</div>
-        <div style="flex:1;display:flex;gap:.35rem;flex-wrap:wrap">
-          ${PIECE_TYPES.map(t => `
-            <button class="piece-type-btn ${p.type===t.key?'active':''}"
-              onclick="setPieceType(${p.id},'${t.key}')">${t.label}</button>
-          `).join('')}
-        </div>
-        ${pieces.length>1?`<button onclick="removePiece(${p.id})" style="background:none;border:none;cursor:pointer;color:var(--dim);font-size:16px;padding:2px 6px;transition:color .15s" onmouseover="this.style.color='#FC8585'" onmouseout="this.style.color='var(--dim)'">✕</button>`:''}
+        ${PIECE_TYPES.map(t=>`<button class="type-btn ${p.type===t.key?'active':''}" onclick="setPieceType(${p.id},'${t.key}')">${t.label}</button>`).join('')}
+        ${pieces.length>1?`<button onclick="removePiece(${p.id})" style="background:none;border:none;cursor:pointer;color:var(--dim);font-size:15px;padding:2px 5px;margin-left:auto">✕</button>`:''}
       </div>
-      ${renderPieceFields(p)}
+      ${renderFields(p)}
     </div>`).join('');
 }
 
-function renderPieceFields(p) {
-  const field = (lbl, id, val, type='text', ph='') =>
+function renderFields(p) {
+  const f = (lbl,key,val,type='text',ph='') =>
     `<div><label class="lbl" style="font-size:8px">${lbl}</label>
-     <input class="inp" style="padding:8px;font-size:12px" type="${type}" value="${val||''}" placeholder="${ph}"
-       onchange="updatePiece(${p.id},'${id}',this.value)"></div>`;
+     <input class="inp" style="padding:7px;font-size:11px" type="${type}" value="${val||''}" placeholder="${ph}"
+       onchange="updatePiece(${p.id},'${key}',this.value)"></div>`;
 
-  if (p.type==='single_distance') return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem">
-    ${field('Distance (m)','distance',p.distance,'number','2000')}
-    ${field('Target split','split',p.split,'text','2:00.0')}
-    ${field('Stroke rate','rate',p.rate,'number','22')}
-    ${field('Rest after (s)','rest',p.rest,'number','0')}</div>`;
+  if (p.type==='single_distance') return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem">
+    ${f('Distance (m)','distance',p.distance,'number','2000')}
+    ${f('Split','split',p.split,'text','2:00')}
+    ${f('Rate','rate',p.rate,'number','22')}
+    ${f('Rest (s)','rest',p.rest,'number','0')}</div>`;
 
-  if (p.type==='single_time') return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem">
-    ${field('Duration (min)','duration_min',p.duration_min,'number','30')}
-    ${field('Target split','split',p.split,'text','2:05.0')}
-    ${field('Stroke rate','rate',p.rate,'number','20')}
-    ${field('Rest after (s)','rest',p.rest,'number','0')}</div>`;
+  if (p.type==='single_time') return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem">
+    ${f('Duration (min)','duration_min',p.duration_min,'number','30')}
+    ${f('Split','split',p.split,'text','2:05')}
+    ${f('Rate','rate',p.rate,'number','20')}
+    ${f('Rest (s)','rest',p.rest,'number','0')}</div>`;
 
-  if (p.type==='distance_intervals') {
-    const reps = p.reps || 4;
-    if (!p.rep_targets || p.rep_targets.length !== reps) {
-      p.rep_targets = Array.from({length: reps}, (_,i) => p.rep_targets?.[i] || {split:'',rate:''});
-    }
-    return `<div style="margin-bottom:.65rem;display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-      ${field('Reps','reps',p.reps,'number','4')}
-      ${field('Distance each (m)','distance',p.distance,'number','500')}
-    </div>
-    <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem">Target per rep</div>
-    <div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.65rem">
-      ${p.rep_targets.map((rt,i) => `
-        <div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr;gap:.4rem;align-items:center">
-          <div style="width:24px;height:24px;border-radius:50%;background:var(--ag);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">${i+1}</div>
-          <input class="inp" style="padding:7px;font-size:11px" placeholder="Split e.g. 1:52" value="${rt.split||''}"
-            onchange="updateRepTarget(${p.id},${i},'split',this.value)">
-          <input class="inp" style="padding:7px;font-size:11px" placeholder="Rate e.g. 30" type="number" value="${rt.rate||''}"
-            onchange="updateRepTarget(${p.id},${i},'rate',this.value)">
-          <input class="inp" style="padding:7px;font-size:11px" placeholder="Rest (s)" type="number" value="${rt.rest||''}"
-            onchange="updateRepTarget(${p.id},${i},'rest',this.value)">
-        </div>`).join('')}
-    </div>`;
-  }
-
-  if (p.type==='timed_intervals') {
-    const reps = p.reps || 4;
-    if (!p.rep_targets || p.rep_targets.length !== reps) {
-      p.rep_targets = Array.from({length: reps}, (_,i) => p.rep_targets?.[i] || {split:'',rate:''});
-    }
-    return `<div style="margin-bottom:.65rem;display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-      ${field('Reps','reps',p.reps,'number','4')}
-      ${field('Duration each (min)','duration_min',p.duration_min,'number','8')}
-    </div>
-    <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:.5rem">Target per rep</div>
-    <div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.65rem">
-      ${p.rep_targets.map((rt,i) => `
-        <div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr;gap:.4rem;align-items:center">
-          <div style="width:24px;height:24px;border-radius:50%;background:var(--ag);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">${i+1}</div>
-          <input class="inp" style="padding:7px;font-size:11px" placeholder="Split e.g. 1:58" value="${rt.split||''}"
-            onchange="updateRepTarget(${p.id},${i},'split',this.value)">
-          <input class="inp" style="padding:7px;font-size:11px" placeholder="Rate e.g. 28" type="number" value="${rt.rate||''}"
-            onchange="updateRepTarget(${p.id},${i},'rate',this.value)">
-          <input class="inp" style="padding:7px;font-size:11px" placeholder="Rest (s)" type="number" value="${rt.rest||''}"
-            onchange="updateRepTarget(${p.id},${i},'rest',this.value)">
-        </div>`).join('')}
-    </div>`;
+  if (p.type==='distance_intervals'||p.type==='timed_intervals') {
+    const isDist = p.type==='distance_intervals';
+    const reps = parseInt(p.reps)||1;
+    if (!p.rep_targets||p.rep_targets.length!==reps)
+      p.rep_targets = Array.from({length:reps},(_,i)=>p.rep_targets?.[i]||{split:'',rate:'',rest:''});
+    return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:.65rem">
+        ${f('Reps','reps',p.reps,'number','4')}
+        ${isDist?f('Distance (m)','distance',p.distance,'number','500'):f('Duration (min)','duration_min',p.duration_min,'number','8')}
+      </div>
+      <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:.4rem">Per-rep targets</div>
+      <div style="display:grid;grid-template-columns:20px 1fr 1fr 1fr;gap:4px;margin-bottom:3px;padding:0 2px">
+        <div></div>
+        <div style="font-size:8px;color:var(--dim);text-align:center">Split</div>
+        <div style="font-size:8px;color:var(--dim);text-align:center">Rate</div>
+        <div style="font-size:8px;color:var(--dim);text-align:center">Rest (s)</div>
+      </div>
+      ${p.rep_targets.map((rt,j)=>`
+        <div style="display:grid;grid-template-columns:20px 1fr 1fr 1fr;gap:4px;margin-bottom:4px;align-items:center">
+          <div style="width:18px;height:18px;border-radius:50%;background:var(--ag);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">${j+1}</div>
+          <input class="inp" style="padding:5px;font-size:11px;text-align:center" placeholder="1:52" value="${rt.split||''}" onchange="updateRT(${p.id},${j},'split',this.value)">
+          <input class="inp" style="padding:5px;font-size:11px;text-align:center" placeholder="R30" type="number" value="${rt.rate||''}" onchange="updateRT(${p.id},${j},'rate',this.value)">
+          <input class="inp" style="padding:5px;font-size:11px;text-align:center" placeholder="60" type="number" value="${rt.rest||''}" onchange="updateRT(${p.id},${j},'rest',this.value)">
+        </div>`).join('')}`;
   }
 
   if (p.type==='variable_intervals') return `
-    <div style="font-size:12px;color:var(--sub);margin-bottom:.65rem">Define each piece individually:</div>
-    <div id="var-pieces-${p.id}">
-      ${(p.sub_pieces||[]).map((sp,j) => `
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.4rem;margin-bottom:.4rem;align-items:end">
-          <div><label class="lbl" style="font-size:8px">Dist (m)</label>
-            <input class="inp" style="padding:7px;font-size:11px" type="number" value="${sp.distance||''}"
-              onchange="updateSubPiece(${p.id},${j},'distance',this.value)"></div>
-          <div><label class="lbl" style="font-size:8px">Split</label>
-            <input class="inp" style="padding:7px;font-size:11px" value="${sp.split||''}"
-              onchange="updateSubPiece(${p.id},${j},'split',this.value)"></div>
-          <div><label class="lbl" style="font-size:8px">Rate</label>
-            <input class="inp" style="padding:7px;font-size:11px" type="number" value="${sp.rate||''}"
-              onchange="updateSubPiece(${p.id},${j},'rate',this.value)"></div>
-          <div><label class="lbl" style="font-size:8px">Rest (s)</label>
-            <input class="inp" style="padding:7px;font-size:11px" type="number" value="${sp.rest||0}"
-              onchange="updateSubPiece(${p.id},${j},'rest',this.value)"></div>
-          <button onclick="removeSubPiece(${p.id},${j})" style="background:none;border:none;cursor:pointer;color:var(--dim);padding:8px;font-size:14px">✕</button>
-        </div>`).join('')}
-    </div>
-    <button class="btn btn-outline btn-xs" onclick="addSubPiece(${p.id})"><i class="ti ti-plus"></i>Add sub-piece</button>`;
+    <div style="font-size:11px;color:var(--sub);margin-bottom:.5rem">Each piece individually:</div>
+    ${(p.sub_pieces||[]).map((sp,j)=>`
+      <div style="display:grid;grid-template-columns:20px 1fr 1fr 1fr 1fr auto;gap:.35rem;margin-bottom:.35rem;align-items:end">
+        <div style="width:18px;height:18px;border-radius:50%;background:var(--ag);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">${j+1}</div>
+        <div><label class="lbl" style="font-size:8px">Dist</label><input class="inp" style="padding:5px;font-size:11px" type="number" value="${sp.distance||''}" placeholder="500" onchange="updateSP(${p.id},${j},'distance',this.value)"></div>
+        <div><label class="lbl" style="font-size:8px">Split</label><input class="inp" style="padding:5px;font-size:11px" value="${sp.split||''}" placeholder="1:52" onchange="updateSP(${p.id},${j},'split',this.value)"></div>
+        <div><label class="lbl" style="font-size:8px">Rate</label><input class="inp" style="padding:5px;font-size:11px" type="number" value="${sp.rate||''}" placeholder="30" onchange="updateSP(${p.id},${j},'rate',this.value)"></div>
+        <div><label class="lbl" style="font-size:8px">Rest (s)</label><input class="inp" style="padding:5px;font-size:11px" type="number" value="${sp.rest||0}" onchange="updateSP(${p.id},${j},'rest',this.value)"></div>
+        <button onclick="removeSP(${p.id},${j})" style="background:none;border:none;cursor:pointer;color:var(--dim);font-size:14px;padding-bottom:4px">✕</button>
+      </div>`).join('')}
+    <button class="btn btn-outline btn-xs" onclick="addSP(${p.id})"><i class="ti ti-plus"></i>Add piece</button>`;
 
   return '';
 }
 
-function setPieceType(id, type) {
-  const p = pieces.find(x=>x.id===id);
-  if (p) { p.type=type; if(type==='variable_intervals') p.sub_pieces=[]; }
+function setPieceType(id,type) {
+  const p=pieces.find(x=>x.id===id); if(p){p.type=type;if(type==='variable_intervals')p.sub_pieces=[];}
   renderPieces();
 }
-
-function updatePiece(id, field, val) {
-  const p = pieces.find(x=>x.id===id);
-  if (!p) return;
-  p[field] = isNaN(val)||val==='' ? val : Number(val);
-  // If reps changed, resize rep_targets array
-  if (field === 'reps' && ['distance_intervals','timed_intervals'].includes(p.type)) {
-    const n = parseInt(val) || 1;
-    const old = p.rep_targets || [];
-    p.rep_targets = Array.from({length: n}, (_,i) => old[i] || {split:'',rate:'',rest:''});
+function updatePiece(id,key,val) {
+  const p=pieces.find(x=>x.id===id); if(!p)return;
+  p[key]=isNaN(val)||val===''?val:Number(val);
+  if(key==='reps'&&(p.type==='distance_intervals'||p.type==='timed_intervals')){
+    const n=parseInt(val)||1;
+    p.rep_targets=Array.from({length:n},(_,i)=>p.rep_targets?.[i]||{split:'',rate:'',rest:''});
     renderPieces();
   }
 }
-
-function updateRepTarget(pieceId, idx, field, val) {
-  const p = pieces.find(x=>x.id===pieceId);
-  if (!p?.rep_targets?.[idx]) return;
-  p.rep_targets[idx][field] = val;
+function updateRT(pid,j,key,val) {
+  const p=pieces.find(x=>x.id===pid); if(p?.rep_targets?.[j])p.rep_targets[j][key]=val;
 }
-
-function updateSubPiece(pieceId, idx, field, val) {
-  const p = pieces.find(x=>x.id===pieceId);
-  if (p?.sub_pieces?.[idx]) p.sub_pieces[idx][field] = isNaN(val)||val==='' ? val : Number(val);
+function updateSP(pid,j,key,val) {
+  const p=pieces.find(x=>x.id===pid); if(p?.sub_pieces?.[j])p.sub_pieces[j][key]=isNaN(val)||val===''?val:Number(val);
 }
-
-function addSubPiece(pieceId) {
-  const p = pieces.find(x=>x.id===pieceId);
-  if (p) { if(!p.sub_pieces) p.sub_pieces=[]; p.sub_pieces.push({distance:500,split:'',rate:'',rest:0}); }
+function addSP(pid) {
+  const p=pieces.find(x=>x.id===pid); if(p){if(!p.sub_pieces)p.sub_pieces=[];p.sub_pieces.push({distance:500,split:'',rate:'',rest:0});}
+  renderPieces();
+}
+function removeSP(pid,j) {
+  const p=pieces.find(x=>x.id===pid); if(p?.sub_pieces)p.sub_pieces.splice(j,1);
   renderPieces();
 }
 
-function removeSubPiece(pieceId, idx) {
-  const p = pieces.find(x=>x.id===pieceId);
-  if (p?.sub_pieces) p.sub_pieces.splice(idx,1);
-  renderPieces();
+// ─── SEND BAR ────────────────────────────────────────
+function updateSendBar() {
+  const btn = document.getElementById('send-btn');
+  const label = document.getElementById('send-date-label');
+  if (selectedMember && selectedDate) {
+    const d = new Date(selectedDate).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    label.textContent = d;
+    btn.disabled=false; btn.style.opacity='1';
+  } else {
+    label.textContent = selectedDate ? 'Select a member' : 'Select a slot above';
+    btn.disabled=true; btn.style.opacity='.5';
+  }
 }
 
-// ─── MEMBER SELECTION ─────────────────────────────────
-function renderMembers(members) {
-  document.getElementById('member-list').innerHTML = members.map(m => {
-    const checked = selectedMembers.has(m.id);
-    const disc = m.discipline==='Indoor'?'b-indoor':m.discipline==='Outdoor'?'b-outdoor':'b-teal';
-    return `<label class="member-check ${checked?'active':''}" id="mc-${m.id}">
-      <input type="checkbox" ${checked?'checked':''} style="accent-color:var(--a1)"
-        onchange="toggleMember('${m.id}',this.checked,this)">
-      <div class="av" style="width:28px;height:28px;font-size:10px;background:${m.color||'#1FB8C9'};flex-shrink:0">${m.initials||'?'}</div>
-      <div style="flex:1"><div style="font-size:12.5px;color:white">${m.full_name}</div></div>
-      <span class="badge ${disc}">${m.discipline||'—'}</span>
-    </label>`;
-  }).join('');
-  updateCount();
-}
-
-function filterMembers() {
-  const q = document.getElementById('member-search').value.toLowerCase();
-  renderMembers(allMembers.filter(m => (m.full_name||'').toLowerCase().includes(q)));
-}
-
-function toggleMember(id, checked, inp) {
-  if (checked) selectedMembers.add(id);
-  else selectedMembers.delete(id);
-  const lbl = inp.closest('label');
-  if (lbl) lbl.style.background = checked ? 'var(--asoft)' : '';
-  updateCount();
-  renderOverrides();
-}
-
-function selectAll() { allMembers.forEach(m => selectedMembers.add(m.id)); renderMembers(allMembers); }
-function selectByDiscipline(d) {
-  allMembers.filter(m => m.discipline===d||m.discipline==='Both').forEach(m => selectedMembers.add(m.id));
-  renderMembers(allMembers);
-}
-function selectGroup(ids) { ids.forEach(id => selectedMembers.add(id)); renderMembers(allMembers); }
-
-function updateCount() {
-  const n = selectedMembers.size;
-  document.getElementById('selected-count').textContent = n + ' member' + (n!==1?'s':'') + ' selected';
-  document.getElementById('assign-btn').innerHTML = `<i class="ti ti-send"></i>Assign to ${n} member${n!==1?'s':''}`;
-}
-
-function renderOverrides() {
-  const card = document.getElementById('overrides-card');
-  const list = document.getElementById('overrides-list');
-  const selected = allMembers.filter(m => selectedMembers.has(m.id));
-  if (!selected.length) { card.style.display='none'; return; }
-  card.style.display = 'block';
-  list.innerHTML = selected.map(m => `
-    <div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:.5rem;align-items:center">
-      <div class="av" style="width:28px;height:28px;font-size:9px;background:${m.color||'#1FB8C9'}">${m.initials||'?'}</div>
-      <div style="font-size:12px;color:white">${m.full_name}</div>
-      <input class="inp" style="padding:6px 8px;font-size:11px" placeholder="Split override"
-        id="override-split-${m.id}">
-      <input class="inp" style="padding:6px 8px;font-size:11px" placeholder="Rate override" type="number"
-        id="override-rate-${m.id}">
-    </div>`).join('');
-}
-
-// ─── ASSIGN ───────────────────────────────────────────
+// ─── ASSIGN ──────────────────────────────────────────
 async function assignWorkout() {
-  if (!selectedMembers.size) { toast('Select at least one member'); return; }
+  if (!selectedMember||!selectedDate) return;
 
-  const date = document.getElementById('sched-date').value;
-  if (!date) { toast('Please set a date'); return; }
-
-  const btn = document.getElementById('assign-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Assigning...';
+  const btn = document.getElementById('send-btn');
+  btn.disabled=true; btn.innerHTML='<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>';
 
   let workoutId = null;
 
-  if (currentTab === 'library') {
+  if (builderTab==='library') {
     workoutId = document.getElementById('library-select').value;
-    if (!workoutId) { toast('Select a workout from library'); btn.disabled=false; return; }
+    if (!workoutId) { toast('Select a workout from library'); btn.disabled=false; btn.innerHTML='<i class="ti ti-send"></i>Assign'; return; }
   } else {
-    const name = document.getElementById('workout-name').value.trim();
-    if (!name) { toast('Please enter a workout name'); btn.disabled=false; return; }
-
+    const name = document.getElementById('w-name').value.trim();
+    if (!name) { toast('Enter a workout name'); btn.disabled=false; btn.innerHTML='<i class="ti ti-send"></i>Assign'; return; }
     const cleanPieces = pieces.map(p => {
-      const cp = {...p};
-      delete cp.id;
-      if (cp.duration_min) { cp.duration = cp.duration_min * 60; delete cp.duration_min; }
+      const cp={...p}; delete cp.id;
+      if(cp.duration_min){cp.duration=cp.duration_min*60;delete cp.duration_min;}
       return cp;
     });
-
-    const { data: newW, error: wErr } = await db.from('workouts').insert({
-      title: name,
-      description: document.getElementById('workout-notes').value.trim(),
-      pieces: cleanPieces,
-      created_by: coachId,
-      is_template: document.getElementById('save-to-library').checked,
-      workout_type: pieces.length === 1 ? pieces[0].type : 'mixed',
+    const {data:newW,error:wErr} = await db.from('workouts').insert({
+      title:name, description:document.getElementById('w-notes').value.trim(),
+      pieces:cleanPieces, created_by:coachId,
+      is_template:document.getElementById('save-lib').checked,
+      workout_type:pieces.length===1?pieces[0].type:'mixed',
     }).select().single();
-
-    if (wErr) { toast('Error creating workout: ' + wErr.message); btn.disabled=false; return; }
+    if (wErr) { toast('Error: '+wErr.message); btn.disabled=false; btn.innerHTML='<i class="ti ti-send"></i>Assign'; return; }
     workoutId = newW.id;
   }
 
-  // Assign to each selected member
-  const assignments = Array.from(selectedMembers).map(memberId => {
-    const splitOverride = document.getElementById('override-split-'+memberId)?.value?.trim();
-    const rateOverride = document.getElementById('override-rate-'+memberId)?.value?.trim();
-    return {
-      workout_id: workoutId,
-      assigned_to: memberId,
-      assigned_by: coachId,
-      scheduled_date: date,
-      status: 'pending',
-      target_overrides: (splitOverride || rateOverride)
-        ? { split: splitOverride || null, rate: rateOverride ? Number(rateOverride) : null }
-        : null,
-    };
+  const {error} = await db.from('assigned_workouts').insert({
+    workout_id:workoutId, assigned_to:selectedMember.id,
+    assigned_by:coachId, scheduled_date:selectedDate, status:'pending',
   });
 
-  const { error: aErr } = await db.from('assigned_workouts').insert(assignments);
-  if (aErr) { toast('Error assigning: ' + aErr.message); btn.disabled=false; return; }
+  if (error) { toast('Error: '+error.message); btn.disabled=false; btn.innerHTML='<i class="ti ti-send"></i>Assign'; return; }
 
-  toast('Workout assigned to ' + selectedMembers.size + ' member' + (selectedMembers.size!==1?'s':'') + ' ✓');
-  setTimeout(() => window.location.replace('dashboard.html'), 1500);
+  toast('Workout assigned to '+selectedMember.full_name+' ✓');
+  btn.innerHTML='<i class="ti ti-check"></i>Assigned';
+
+  // Reset for next assignment
+  setTimeout(()=>{
+    selectedDate=null; updateSendBar();
+    btn.innerHTML='<i class="ti ti-send"></i>Assign';
+    document.getElementById('library-select').value='';
+    document.getElementById('lib-preview').style.display='none';
+    // Refresh last sessions
+    selectMember(selectedMember.id);
+  },1500);
+}
+
+function toast(msg) {
+  let c=document.getElementById('toasts');
+  if(!c){c=document.createElement('div');c.id='toasts';c.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px';document.body.appendChild(c);}
+  const el=document.createElement('div');el.className='toast';
+  el.innerHTML='<i class="ti ti-check"></i><span>'+msg+'</span>';
+  c.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),300)},3500);
 }
 </script>
 </body></html>
