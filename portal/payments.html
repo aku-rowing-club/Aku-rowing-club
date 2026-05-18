@@ -382,18 +382,18 @@ svg.spark{overflow:visible}
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1rem">
         <div class="bank-field">
           <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">Account title</div>
-          <div style="font-size:13px;font-weight:600;color:white">Karachi Boat Club</div>
-          <button class="copy-btn" onclick="copyText('Karachi Boat Club','Account title')"><i class="ti ti-copy" style="font-size:12px"></i>Copy</button>
+          <div style="font-size:13px;font-weight:600;color:white" id="bank-title">Loading...</div>
+          <button class="copy-btn" onclick="copyText(document.getElementById('bank-title').textContent,'Account title')"><i class="ti ti-copy" style="font-size:12px"></i>Copy</button>
         </div>
         <div class="bank-field">
           <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">Account number</div>
-          <div style="font-size:13px;font-weight:600;color:white">Update in settings</div>
-          <button class="copy-btn" onclick="copyText('','Account number')"><i class="ti ti-copy" style="font-size:12px"></i>Copy</button>
+          <div style="font-size:13px;font-weight:600;color:white;font-variant-numeric:tabular-nums" id="bank-account">Loading...</div>
+          <button class="copy-btn" onclick="copyText(document.getElementById('bank-account').textContent,'Account number')"><i class="ti ti-copy" style="font-size:12px"></i>Copy</button>
         </div>
         <div class="bank-field">
           <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">Bank</div>
-          <div style="font-size:13px;font-weight:600;color:white">MCB Bank Ltd</div>
-          <button class="copy-btn" onclick="copyText('MCB Bank Ltd','Bank name')"><i class="ti ti-copy" style="font-size:12px"></i>Copy</button>
+          <div style="font-size:13px;font-weight:600;color:white" id="bank-name">Loading...</div>
+          <button class="copy-btn" onclick="copyText(document.getElementById('bank-name').textContent,'Bank name')"><i class="ti ti-copy" style="font-size:12px"></i>Copy</button>
         </div>
       </div>
       <div style="padding:.85rem 1.1rem;background:rgba(251,183,36,.07);border:1px solid rgba(251,183,36,.15);border-radius:10px;display:flex;align-items:flex-start;gap:.75rem">
@@ -540,6 +540,7 @@ const PLANS = {
     await loadPlan(p.id);
     await loadKbcStatus(p.id);
   }
+  await loadBankDetails();
   await loadPayments(p.id);
 })();
 
@@ -772,6 +773,17 @@ function updateStats(payments, profile) {
     document.getElementById('stat-next').textContent = new Date(next.due_date).toLocaleDateString('en-GB',{month:'short',year:'numeric'});
     document.getElementById('stat-next-sub').textContent = 'PKR '+next.amount?.toLocaleString();
   } else document.getElementById('stat-next').textContent='None due';
+}
+
+async function loadBankDetails() {
+  const { data } = await db.from('club_settings').select('value').eq('key', 'kbc_bank').maybeSingle();
+  if (!data) return;
+  try {
+    const bank = JSON.parse(data.value);
+    if (bank.title) document.getElementById('bank-title').textContent = bank.title;
+    if (bank.account) document.getElementById('bank-account').textContent = bank.account;
+    if (bank.bank) document.getElementById('bank-name').textContent = bank.bank;
+  } catch(e) { console.error('Bank details parse error', e); }
 }
 
 function copyText(text,label) {
