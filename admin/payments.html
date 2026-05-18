@@ -384,7 +384,7 @@ async function loadAll() {
   // Load all payments with member profile joined
   const { data, error } = await db
     .from('payments')
-    .select(`*, member:profiles(full_name, initials, color, portal_role)`)
+    .select('*, member:profiles!payments_member_id_fkey(full_name, initials, color)')
     .order('created_at', { ascending: false });
 
   document.getElementById('submitted-loading').style.display = 'none';
