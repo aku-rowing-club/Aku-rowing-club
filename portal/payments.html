@@ -278,6 +278,10 @@ svg.spark{overflow:visible}
   margin-top:5px;transition:color .15s;font-family:Inter,sans-serif}
 .copy-btn:hover{color:var(--a1)}
 .bank-field{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:1rem 1.1rem}
+.plan-step{display:flex;align-items:center;gap:.85rem;padding:.75rem 1rem;border-radius:10px;background:var(--surf2)}
+.plan-step.done{background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.15)}
+.plan-step.current{background:var(--asoft);border:1px solid rgba(31,184,201,.25)}
+.plan-step.upcoming{opacity:.5}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>
 </head><body>
@@ -335,11 +339,26 @@ svg.spark{overflow:visible}
       <div class="stat-trend" id="stat-next-sub"></div></div>
   </div>
 
-  <!-- KBC SECTION — only shown for outdoor/both members -->
+  <!-- KBC SECTION -->
   <div id="kbc-section" style="display:none">
 
+    <!-- INSTALLMENT PLAN (shown if assigned) -->
+    <div id="plan-section" style="display:none;margin-bottom:1.25rem">
+      <div class="card" style="background:linear-gradient(135deg,#0A1A2E,#0D2040);border-color:rgba(31,184,201,.2)">
+        <div class="card-head">
+          <div>
+            <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--a1);font-weight:600">Need-based plan</div>
+            <div class="card-title" id="plan-title">Installment plan</div>
+          </div>
+          <span class="badge b-teal" id="plan-badge"></span>
+        </div>
+        <div id="plan-steps" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem"></div>
+        <div style="padding:.85rem 1.1rem;background:rgba(31,184,201,.06);border:1px solid rgba(31,184,201,.15);border-radius:10px;font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.65" id="plan-note"></div>
+      </div>
+    </div>
+
     <!-- KBC STATUS CARD -->
-    <div id="kbc-status-card" class="card" style="margin-bottom:1.25rem;padding:0;overflow:hidden;background:linear-gradient(135deg,#0A1A2E,#0D2040);border-color:rgba(31,184,201,.2)">
+    <div class="card" style="margin-bottom:1.25rem;padding:0;overflow:hidden;background:linear-gradient(135deg,#0A1A2E,#0D2040);border-color:rgba(31,184,201,.2)">
       <div style="padding:1.5rem 2rem;border-bottom:1px solid rgba(255,255,255,.07)">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
           <div style="display:flex;align-items:center;gap:.85rem">
@@ -380,55 +399,78 @@ svg.spark{overflow:visible}
       <div style="padding:.85rem 1.1rem;background:rgba(251,183,36,.07);border:1px solid rgba(251,183,36,.15);border-radius:10px;display:flex;align-items:flex-start;gap:.75rem">
         <i class="ti ti-info-circle" style="font-size:15px;color:#FBB724;flex-shrink:0;margin-top:1px"></i>
         <div style="font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.65">
-          Use <strong style="color:white" id="transfer-hint">your full name + "AKU RC"</strong> as the transfer description so KBC can match your payment.
+          Use <strong style="color:white" id="transfer-hint">your full name + "AKU RC"</strong> as the transfer description.
         </div>
       </div>
     </div>
 
     <!-- RECEIPT UPLOAD -->
     <div class="card" style="margin-bottom:1.25rem">
-      <div class="card-head"><div class="card-title">Upload payment receipt</div></div>
+      <div class="card-head"><div class="card-title">Submit payment</div></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem">
         <div>
           <label class="lbl">Amount paid (PKR)</label>
-          <input class="inp" id="amount-input" type="number" placeholder="e.g. 18000 or 2000" min="1">
+          <input class="inp" id="amount-input" type="number" placeholder="Exact amount you paid" min="1">
         </div>
         <div>
           <label class="lbl">Description</label>
-          <input class="inp" id="desc-input" type="text" id="desc-input" placeholder="e.g. KBC Registration or KBC Monthly May">
+          <input class="inp" id="desc-input" type="text" placeholder="e.g. KBC Installment 1 of 3">
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:start">
-        <div>
+
+      <!-- PAYMENT METHOD DROPDOWN -->
+      <div style="margin-bottom:1rem">
+        <label class="lbl">Payment method</label>
+        <select class="sel" id="payment-method" onchange="toggleReceiptUpload()">
+          <option value="">— Select method —</option>
+          <option value="transfer">Transferred to KBC bank account</option>
+          <option value="cash">Paid in cash to KBC admin</option>
+        </select>
+      </div>
+
+      <!-- RECEIPT UPLOAD (only for transfer) -->
+      <div id="receipt-section" style="display:none">
+        <label class="lbl">Upload receipt</label>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:start">
           <div class="upload-zone" id="drop-zone"
             onclick="document.getElementById('file-input').click()"
             ondragover="event.preventDefault();this.classList.add('drag')"
             ondragleave="this.classList.remove('drag')"
             ondrop="handleDrop(event)">
             <input type="file" id="file-input" accept="image/*,.pdf" style="display:none" onchange="handleFile(this.files[0])">
-            <i class="ti ti-upload" style="font-size:26px;color:rgba(255,255,255,.25);margin-bottom:.5rem;display:block"></i>
-            <div id="drop-label" style="font-size:13px;font-weight:500;color:white;margin-bottom:3px">Drop receipt here or click to upload</div>
-            <div style="font-size:11px;color:rgba(255,255,255,.3)">Screenshot or PDF · max 5MB</div>
+            <i class="ti ti-upload" style="font-size:24px;color:rgba(255,255,255,.25);margin-bottom:.4rem;display:block"></i>
+            <div id="drop-label" style="font-size:13px;font-weight:500;color:white;margin-bottom:3px">Drop screenshot or PDF here</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.3)">From your banking app · max 5MB</div>
           </div>
-          <div style="margin-top:.5rem;font-size:11px;color:rgba(255,255,255,.3);text-align:center">Admin confirms within 24 hours · KBC status updates automatically</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:.5rem;padding-top:.25rem">
           <button class="btn btn-accent" id="submit-btn" onclick="submitReceipt()" disabled style="opacity:.5">
             <i class="ti ti-send"></i>Submit
           </button>
         </div>
       </div>
+
+      <!-- CASH SUBMIT (no receipt needed) -->
+      <div id="cash-section" style="display:none">
+        <div style="padding:.85rem 1.1rem;background:rgba(251,183,36,.07);border:1px solid rgba(251,183,36,.15);border-radius:10px;margin-bottom:1rem;font-size:12.5px;color:rgba(255,255,255,.6);line-height:1.65">
+          <i class="ti ti-info-circle" style="color:#FBB724"></i>
+          Cash payments are logged and sent to admin for confirmation. No receipt needed.
+        </div>
+        <button class="btn btn-accent" id="cash-submit-btn" onclick="submitCash()">
+          <i class="ti ti-check"></i>Log cash payment
+        </button>
+      </div>
+
+      <div style="margin-top:.75rem;font-size:11px;color:rgba(255,255,255,.3);text-align:center">Admin confirms within 24 hours · KBC status updates automatically</div>
     </div>
   </div>
 
   <!-- INDOOR NOTICE -->
-  <div id="indoor-notice" style="display:none">
-    <div class="card" style="margin-bottom:1.25rem;background:rgba(107,159,255,.06);border-color:rgba(107,159,255,.2)">
+  <div id="indoor-notice" style="display:none;margin-bottom:1.25rem">
+    <div class="card" style="background:rgba(107,159,255,.06);border-color:rgba(107,159,255,.2)">
       <div style="display:flex;align-items:center;gap:.85rem">
         <i class="ti ti-info-circle" style="font-size:20px;color:#6B9FFF"></i>
         <div>
           <div style="font-size:13px;font-weight:500;color:white;margin-bottom:3px">KBC membership not required</div>
-          <div style="font-size:12.5px;color:var(--sub)">You're registered as an indoor-only member. KBC fees don't apply to you.</div>
+          <div style="font-size:12.5px;color:var(--sub)">You're an indoor-only member. KBC fees don't apply.</div>
         </div>
       </div>
     </div>
@@ -442,13 +484,11 @@ svg.spark{overflow:visible}
     </div>
     <div class="tbl-wrap" id="payments-table" style="display:none">
       <table class="tbl">
-        <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Paid to</th><th>Status</th><th>Receipt</th></tr></thead>
+        <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Method</th><th>Status</th><th>Receipt</th></tr></thead>
         <tbody id="payments-tbody"></tbody>
       </table>
     </div>
-    <div id="payments-empty" style="display:none;padding:2rem;text-align:center;color:var(--sub);font-size:13px">
-      No payment records yet.
-    </div>
+    <div id="payments-empty" style="display:none;padding:2rem;text-align:center;color:var(--sub);font-size:13px">No payment records yet.</div>
   </div>
 
 </div>
@@ -459,6 +499,27 @@ svg.spark{overflow:visible}
 let currentUser = null;
 let selectedFile = null;
 let kbcData = null;
+let planData = null;
+
+const PLANS = {
+  'installment_3x6': {
+    label: '3 × PKR 6,000 installments',
+    note: 'After all 3 installments are confirmed, monthly PKR 2,000 begins from month 4.',
+    steps: [
+      { label: 'Installment 1 of 3', amount: 6000 },
+      { label: 'Installment 2 of 3', amount: 6000 },
+      { label: 'Installment 3 of 3', amount: 6000 },
+    ]
+  },
+  'installment_2x9': {
+    label: '2 × PKR 9,000 installments',
+    note: 'After both installments are confirmed, 1 month grace, then monthly PKR 2,000 from month 5.',
+    steps: [
+      { label: 'Installment 1 of 2', amount: 9000 },
+      { label: 'Installment 2 of 2', amount: 9000 },
+    ]
+  }
+};
 
 (async () => {
   const session = await requireAuth('member');
@@ -466,136 +527,111 @@ let kbcData = null;
   currentUser = session;
   const p = session.profile;
 
-  // Fill topbar
   document.getElementById('user-av').textContent = p.initials || p.full_name?.slice(0,2).toUpperCase() || '?';
   document.getElementById('user-av').style.background = p.color || '#1FB8C9';
   document.getElementById('user-name').textContent = p.full_name;
   document.getElementById('transfer-hint').textContent = (p.full_name || 'Your name') + ' AKU RC';
 
-  // Show/hide KBC section based on discipline
   const isOutdoor = p.discipline === 'Outdoor' || p.discipline === 'Both';
   document.getElementById('kbc-section').style.display = isOutdoor ? 'block' : 'none';
   document.getElementById('indoor-notice').style.display = isOutdoor ? 'none' : 'block';
 
-  if (isOutdoor) await loadKbcStatus(p.id);
+  if (isOutdoor) {
+    await loadPlan(p.id);
+    await loadKbcStatus(p.id);
+  }
   await loadPayments(p.id);
 })();
 
-async function loadKbcStatus(memberId) {
-  const { data: kbc } = await db
-    .from('kbc_memberships')
-    .select('*')
-    .eq('member_id', memberId)
-    .single();
+async function loadPlan(memberId) {
+  const { data: kbc } = await db.from('kbc_memberships').select('*').eq('member_id', memberId).single();
+  if (!kbc?.payment_plan || kbc.payment_plan === 'standard') return;
 
+  planData = kbc;
+  const plan = PLANS[kbc.payment_plan];
+  if (!plan) return;
+
+  document.getElementById('plan-section').style.display = 'block';
+  document.getElementById('plan-title').textContent = plan.label;
+  document.getElementById('plan-note').textContent = plan.note;
+
+  const confirmed = kbc.installments_paid || 0;
+  const total = plan.steps.length;
+  document.getElementById('plan-badge').textContent = confirmed + ' / ' + total + ' paid';
+
+  const stepsEl = document.getElementById('plan-steps');
+  stepsEl.innerHTML = plan.steps.map((step, i) => {
+    const isDone = i < confirmed;
+    const isCurrent = i === confirmed;
+    const cls = isDone ? 'done' : isCurrent ? 'current' : 'upcoming';
+    const ico = isDone
+      ? '<i class="ti ti-circle-check" style="color:#34D399;font-size:18px"></i>'
+      : isCurrent
+        ? '<i class="ti ti-circle" style="color:var(--a1);font-size:18px"></i>'
+        : '<i class="ti ti-circle-dashed" style="font-size:18px;color:var(--dim)"></i>';
+    return `<div class="plan-step ${cls}">
+      ${ico}
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:${isCurrent?'600':'400'};color:${isDone?'#34D399':isCurrent?'white':'var(--sub)'}">${step.label}</div>
+        <div style="font-size:11px;color:var(--dim)">PKR ${step.amount.toLocaleString()}</div>
+      </div>
+      ${isDone ? '<span class="badge b-green">Confirmed</span>' : isCurrent ? '<span class="badge b-teal">Due now</span>' : '<span class="badge b-dim">Upcoming</span>'}
+    </div>`;
+  }).join('');
+
+  // Pre-fill amount for current installment
+  if (confirmed < total) {
+    document.getElementById('amount-input').value = plan.steps[confirmed].amount;
+    document.getElementById('desc-input').value = plan.steps[confirmed].label;
+  }
+}
+
+async function loadKbcStatus(memberId) {
+  const { data: kbc } = await db.from('kbc_memberships').select('*').eq('member_id', memberId).single();
   kbcData = kbc;
   const title = document.getElementById('kbc-status-title');
   const badge = document.getElementById('kbc-status-badge');
   const body = document.getElementById('kbc-status-body');
 
   if (!kbc) {
-    // Never registered
     title.textContent = 'Registration required';
     badge.innerHTML = '<span class="badge b-amber">Not registered</span>';
-    body.innerHTML = `
-      <strong style="color:white">One-time registration fee: PKR 18,000</strong><br>
-      Covers your first 3 months at KBC. From month 4, PKR 2,000/month is auto-charged on the 1st.
-      Transfer PKR 18,000 to the KBC account below and upload your receipt.`;
-    document.getElementById('amount-input').value = '18000';
-    document.getElementById('desc-input').value = 'KBC Registration Fee';
+    body.innerHTML = planData
+      ? 'Pay your first installment using the plan above.'
+      : '<strong style="color:white">One-time registration: PKR 18,000</strong> covers your first 3 months free. Monthly PKR 2,000 begins month 4.';
+    if (!planData) {
+      document.getElementById('amount-input').value = '18000';
+      document.getElementById('desc-input').value = 'KBC Registration Fee';
+    }
   } else if (kbc.status === 'cancelled') {
     title.textContent = 'Membership cancelled';
     badge.innerHTML = '<span class="badge b-red">Cancelled</span>';
-    body.innerHTML = `Your KBC membership was cancelled after 3 missed monthly payments.
-      To reactivate, pay PKR 18,000 registration fee again and upload your receipt.`;
-    document.getElementById('amount-input').value = '18000';
-    document.getElementById('desc-input').value = 'KBC Re-registration Fee';
+    body.innerHTML = 'Cancelled after 3 missed payments. Contact admin to discuss reactivation.';
   } else {
     const freeUntil = new Date(kbc.free_until);
-    const now = new Date();
-    const inFreeperiod = freeUntil > now;
+    const inFree = freeUntil > new Date();
     const missed = kbc.consecutive_missed || 0;
-
-    if (inFreeperiod) {
-      title.textContent = 'Active — free period';
-      badge.innerHTML = '<span class="badge b-green">Active</span>';
-      const months = Math.max(0, Math.round((freeUntil - now) / (1000*60*60*24*30)));
-      body.innerHTML = `Your registration covers you until <strong style="color:white">${freeUntil.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</strong>.
-        Monthly PKR 2,000 charges begin after that.`;
-    } else {
-      title.textContent = missed > 0 ? `Active — ${missed} month${missed>1?'s':''} missed` : 'Active';
-      badge.innerHTML = missed >= 2
-        ? '<span class="badge b-red">At risk — ' + missed + ' missed</span>'
-        : missed === 1
-          ? '<span class="badge b-amber">1 month missed</span>'
-          : '<span class="badge b-green">Active</span>';
-      body.innerHTML = missed > 0
-        ? `<strong style="color:#FC8585">Warning:</strong> ${missed} consecutive month${missed>1?'s':''} unpaid.
-           Membership cancels after 3 missed months. Upload your receipt now.`
-        : `Monthly fee: <strong style="color:white">PKR 2,000</strong> due on the 1st of each month.`;
+    title.textContent = inFree ? 'Active — free period' : missed > 0 ? `Active — ${missed} month${missed>1?'s':''} missed` : 'Active';
+    badge.innerHTML = missed >= 2
+      ? `<span class="badge b-red">${missed} months missed</span>`
+      : missed === 1 ? '<span class="badge b-amber">1 month missed</span>'
+      : '<span class="badge b-green">Active</span>';
+    body.innerHTML = inFree
+      ? `Free until <strong style="color:white">${freeUntil.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</strong>. Monthly PKR 2,000 begins after.`
+      : missed > 0
+        ? `<strong style="color:#FC8585">Warning:</strong> ${missed} missed month${missed>1?'s':''}. Cancels after 3. Upload receipt now.`
+        : 'Monthly fee: <strong style="color:white">PKR 2,000</strong> due 1st of each month.';
+    if (!planData && !inFree) {
       document.getElementById('amount-input').value = '2000';
       document.getElementById('desc-input').value = 'KBC Monthly Fee — ' + new Date().toLocaleDateString('en-GB',{month:'long',year:'numeric'});
     }
   }
 }
 
-async function loadPayments(memberId) {
-  const { data: payments, error } = await db
-    .from('payments')
-    .select('*')
-    .eq('member_id', memberId)
-    .order('created_at', { ascending: false });
-
-  document.getElementById('payments-loading').style.display = 'none';
-
-  if (error || !payments?.length) {
-    document.getElementById('payments-empty').style.display = 'block';
-    updateStats([], currentUser.profile);
-    return;
-  }
-
-  updateStats(payments, currentUser.profile);
-
-  const tbody = document.getElementById('payments-tbody');
-  const statusColors = { confirmed:'b-green', submitted:'b-blue', pending:'b-amber', overdue:'b-red' };
-  const statusLabels = { confirmed:'Confirmed', submitted:'Receipt submitted', pending:'Pending', overdue:'Overdue' };
-
-  tbody.innerHTML = payments.map(p => {
-    const date = new Date(p.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-    return `<tr>
-      <td style="font-size:12px">${date}</td>
-      <td style="font-weight:500;color:white">${p.description}</td>
-      <td style="font-variant-numeric:tabular-nums">PKR ${p.amount?.toLocaleString()}</td>
-      <td style="font-size:12px;color:var(--sub)">${p.paid_to}</td>
-      <td><span class="badge ${statusColors[p.status]||'b-dim'}">${statusLabels[p.status]||p.status}</span></td>
-      <td>${p.receipt_url ? `<a href="${p.receipt_url}" target="_blank" class="btn btn-ghost btn-xs"><i class="ti ti-eye"></i></a>` : '—'}</td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('payments-table').style.display = 'block';
-}
-
-function updateStats(payments, profile) {
-  const outstanding = payments.filter(p=>['pending','overdue'].includes(p.status)).reduce((s,p)=>s+(p.amount||0),0);
-  const paid = payments.filter(p=>p.status==='confirmed').reduce((s,p)=>s+(p.amount||0),0);
-  const next = payments.find(p=>p.status==='pending'&&p.due_date);
-
-  document.getElementById('stat-outstanding').textContent = 'PKR ' + outstanding.toLocaleString();
-  document.getElementById('stat-outstanding').style.color = outstanding > 0 ? '#FC8585' : 'white';
-  document.getElementById('stat-outstanding-sub').textContent = outstanding > 0 ? 'Action needed' : 'All caught up ✓';
-  document.getElementById('stat-outstanding-sub').className = 'stat-trend ' + (outstanding > 0 ? 'down' : 'up');
-  document.getElementById('stat-paid').textContent = 'PKR ' + paid.toLocaleString();
-
-  const kbcActive = profile.kbc_active;
-  document.getElementById('stat-kbc').textContent = profile.discipline === 'Indoor' ? 'N/A' : kbcActive ? 'Active' : 'Inactive';
-  document.getElementById('stat-kbc').style.color = profile.discipline === 'Indoor' ? 'var(--sub)' : kbcActive ? '#34D399' : '#FC8585';
-
-  if (next) {
-    document.getElementById('stat-next').textContent = new Date(next.due_date).toLocaleDateString('en-GB',{month:'short',year:'numeric'});
-    document.getElementById('stat-next-sub').textContent = 'PKR ' + next.amount?.toLocaleString();
-  } else {
-    document.getElementById('stat-next').textContent = 'None due';
-  }
+function toggleReceiptUpload() {
+  const method = document.getElementById('payment-method').value;
+  document.getElementById('receipt-section').style.display = method === 'transfer' ? 'block' : 'none';
+  document.getElementById('cash-section').style.display = method === 'cash' ? 'block' : 'none';
 }
 
 function handleDrop(e) {
@@ -615,75 +651,135 @@ function handleFile(file) {
 }
 
 async function submitReceipt() {
-  if (!selectedFile || !currentUser) return;
-
   const amount = parseInt(document.getElementById('amount-input').value);
   const desc = document.getElementById('desc-input').value.trim();
-
-  if (!amount || amount < 1) { toast('Please enter the amount you paid'); return; }
+  if (!amount || amount < 1) { toast('Please enter the amount'); return; }
   if (!desc) { toast('Please enter a description'); return; }
+  if (!selectedFile) { toast('Please upload your receipt'); return; }
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Uploading...';
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>';
 
   try {
     const ext = selectedFile.name.split('.').pop();
     const path = `receipts/${currentUser.user.id}/${Date.now()}.${ext}`;
-
     const { error: upErr } = await db.storage.from('receipts').upload(path, selectedFile, { upsert: true });
     if (upErr) throw upErr;
-
     const { data: urlData } = db.storage.from('receipts').getPublicUrl(path);
-    const receiptUrl = urlData.publicUrl;
 
-    // Check for existing pending KBC payment this month
-    const { data: existing } = await db
-      .from('payments')
-      .select('id')
-      .eq('member_id', currentUser.user.id)
-      .eq('paid_to', 'Karachi Boat Club')
-      .in('status', ['pending', 'overdue'])
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    if (existing?.length) {
-      await db.from('payments')
-        .update({ status: 'submitted', receipt_url: receiptUrl, amount })
-        .eq('id', existing[0].id);
-    } else {
-      await db.from('payments').insert({
-        member_id: currentUser.user.id,
-        description: desc,
-        amount,
-        paid_to: 'Karachi Boat Club',
-        status: 'submitted',
-        receipt_url: receiptUrl,
-      });
-    }
-
-    toast('Receipt submitted ✓ Admin will confirm within 24 hours');
+    await insertPayment(amount, desc, 'bank_transfer', urlData.publicUrl);
+    toast('Receipt submitted ✓ Admin confirms within 24 hours');
     btn.innerHTML = '<i class="ti ti-check"></i> Submitted';
     setTimeout(() => loadPayments(currentUser.user.id), 1000);
-
   } catch (err) {
-    toast('Upload failed: ' + err.message);
+    toast('Failed: ' + err.message);
     btn.disabled = false;
     btn.innerHTML = '<i class="ti ti-send"></i> Submit';
     btn.style.opacity = '1';
   }
 }
 
-function copyText(text, label) {
-  if (!text) { toast('Account number not set — contact admin'); return; }
-  navigator.clipboard.writeText(text).then(() => toast(label + ' copied ✓'));
+async function submitCash() {
+  const amount = parseInt(document.getElementById('amount-input').value);
+  const desc = document.getElementById('desc-input').value.trim();
+  if (!amount || amount < 1) { toast('Please enter the amount'); return; }
+  if (!desc) { toast('Please enter a description'); return; }
+
+  const btn = document.getElementById('cash-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Logging...';
+
+  try {
+    await insertPayment(amount, desc, 'cash', null);
+    toast('Cash payment logged ✓ Admin will confirm');
+    btn.innerHTML = '<i class="ti ti-check"></i> Logged';
+    setTimeout(() => loadPayments(currentUser.user.id), 1000);
+  } catch (err) {
+    toast('Failed: ' + err.message);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-check"></i> Log cash payment';
+  }
 }
 
+async function insertPayment(amount, desc, method, receiptUrl) {
+  const { data: existing } = await db.from('payments').select('id')
+    .eq('member_id', currentUser.user.id)
+    .eq('paid_to', 'Karachi Boat Club')
+    .in('status', ['pending','overdue'])
+    .order('created_at', { ascending: false }).limit(1);
+
+  const payload = {
+    member_id: currentUser.user.id,
+    description: desc,
+    amount,
+    paid_to: 'Karachi Boat Club',
+    status: 'submitted',
+    payment_method: method,
+    receipt_url: receiptUrl,
+  };
+
+  if (existing?.length) {
+    await db.from('payments').update(payload).eq('id', existing[0].id);
+  } else {
+    await db.from('payments').insert(payload);
+  }
+}
+
+async function loadPayments(memberId) {
+  const { data: payments } = await db.from('payments').select('*')
+    .eq('member_id', memberId).order('created_at', { ascending: false });
+
+  document.getElementById('payments-loading').style.display = 'none';
+  if (!payments?.length) {
+    document.getElementById('payments-empty').style.display = 'block';
+    updateStats([], currentUser.profile); return;
+  }
+  updateStats(payments, currentUser.profile);
+
+  const statusColors = { confirmed:'b-green',submitted:'b-blue',pending:'b-amber',overdue:'b-red' };
+  const statusLabels = { confirmed:'Confirmed',submitted:'Submitted',pending:'Pending',overdue:'Overdue' };
+  const methodLabels = { bank_transfer:'Bank transfer',cash:'Cash to admin' };
+
+  document.getElementById('payments-tbody').innerHTML = payments.map(p => {
+    const date = new Date(p.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    return `<tr>
+      <td style="font-size:12px">${date}</td>
+      <td style="font-weight:500;color:white">${p.description}</td>
+      <td>PKR ${p.amount?.toLocaleString()}</td>
+      <td style="font-size:12px;color:var(--sub)">${methodLabels[p.payment_method]||'—'}</td>
+      <td><span class="badge ${statusColors[p.status]||'b-dim'}">${statusLabels[p.status]||p.status}</span></td>
+      <td>${p.receipt_url ? `<a href="${p.receipt_url}" target="_blank" class="btn btn-ghost btn-xs"><i class="ti ti-eye"></i></a>` : '—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('payments-table').style.display = 'block';
+}
+
+function updateStats(payments, profile) {
+  const out = payments.filter(p=>['pending','overdue'].includes(p.status)).reduce((s,p)=>s+(p.amount||0),0);
+  const paid = payments.filter(p=>p.status==='confirmed').reduce((s,p)=>s+(p.amount||0),0);
+  const next = payments.find(p=>p.status==='pending'&&p.due_date);
+  document.getElementById('stat-outstanding').textContent = 'PKR '+out.toLocaleString();
+  document.getElementById('stat-outstanding').style.color = out>0?'#FC8585':'white';
+  document.getElementById('stat-outstanding-sub').textContent = out>0?'Action needed':'All caught up ✓';
+  document.getElementById('stat-outstanding-sub').className='stat-trend '+(out>0?'down':'up');
+  document.getElementById('stat-paid').textContent = 'PKR '+paid.toLocaleString();
+  document.getElementById('stat-kbc').textContent = profile.discipline==='Indoor'?'N/A':profile.kbc_active?'Active':'Inactive';
+  document.getElementById('stat-kbc').style.color = profile.discipline==='Indoor'?'var(--sub)':profile.kbc_active?'#34D399':'#FC8585';
+  if (next) {
+    document.getElementById('stat-next').textContent = new Date(next.due_date).toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+    document.getElementById('stat-next-sub').textContent = 'PKR '+next.amount?.toLocaleString();
+  } else document.getElementById('stat-next').textContent='None due';
+}
+
+function copyText(text,label) {
+  if(!text){toast('Not set — contact admin');return;}
+  navigator.clipboard.writeText(text).then(()=>toast(label+' copied ✓'));
+}
 function toast(msg) {
-  let c = document.getElementById('toasts');
-  if (!c) { c = document.createElement('div'); c.id='toasts'; c.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px'; document.body.appendChild(c); }
-  const el = document.createElement('div');
-  el.className='toast';
+  let c=document.getElementById('toasts');
+  if(!c){c=document.createElement('div');c.id='toasts';c.style.cssText='position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px';document.body.appendChild(c);}
+  const el=document.createElement('div');el.className='toast';
   el.innerHTML='<i class="ti ti-check"></i><span>'+msg+'</span>';
   c.appendChild(el);
   setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),300)},3500);
